@@ -17,21 +17,43 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
+    let isMounted = true;
+
     // Wake up the server on page load
     wakeUpServer();
-    
+
+    // Avoid keeping login/signup in a long loading state during backend cold starts.
+    const loadingFallback = setTimeout(() => {
+      if (isMounted) setLoading(false);
+    }, 1500);
+
     async function checkAuth() {
-      const response = await getCurrentUser();
-      if (!response.error) {
-        setUser(response.user);
+      try {
+        const response = await getCurrentUser();
+        if (!isMounted) return;
+
+        if (!response.error) {
+          setUser(response.user);
+        }
+
+        // Redirect to dashboard if user is logged in.
+        if (response.user) {
+          router.push('/dashboard');
+        }
+      } finally {
+        if (isMounted) {
+          clearTimeout(loadingFallback);
+          setLoading(false);
+        }
       }
-      // redirect to dashboard if user is logged in
-      if (response.user) {
-        router.push('/dashboard');
-      }
-      setLoading(false);
     }
+
     checkAuth();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(loadingFallback);
+    };
   }, []);
 
   const handleLogout = async () => {
