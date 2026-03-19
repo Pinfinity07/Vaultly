@@ -3,13 +3,18 @@ const expenseService = require('../services/expense.service');
 async function createExpense(req, res) {
     const { categoryId, amount, date, description, groupId = null } = req.body;
     const userId = req.userId;
+    const numericAmount = Number(amount);
 
-    if(!categoryId || !amount || !date) {
+    if(!categoryId || amount === undefined || amount === null || !date) {
         return res.status(400).json({error: 'Missing required fields'});
     }
 
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+        return res.status(400).json({ error: 'Amount must be a positive number' });
+    }
+
     try{
-        const expense = await expenseService.createExpense({ userId, categoryId, amount, date, description: description || '', groupId });
+        const expense = await expenseService.createExpense({ userId, categoryId, amount: numericAmount, date, description: description || '', groupId });
         return res.status(201).json({ expense });
     }catch(error){
         console.error('Create expense error:', error);
@@ -72,6 +77,14 @@ async function updateExpense(req, res){
 
     if(!id){
         return res.status(400).json({ error: 'Expense ID is required' });
+    }
+
+    if (updateData.amount !== undefined) {
+        const numericAmount = Number(updateData.amount);
+        if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+            return res.status(400).json({ error: 'Amount must be a positive number' });
+        }
+        updateData.amount = numericAmount;
     }
 
     try{

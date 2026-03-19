@@ -2,6 +2,10 @@ const prisma = require("../lib/prisma");
 
 async function createExpense({ userId, amount, categoryId, date, description, groupId = null }) {
     try{
+        if (!Number.isFinite(amount) || amount <= 0) {
+            throw new Error("Invalid expense amount");
+        }
+
         // Find or create category by name
         let category = await prisma.categories.findFirst({
             where: { name: categoryId }
@@ -197,6 +201,12 @@ async function updateExpense(expenseId, userId, updateData){
 
         if(expense.userId !== userId){
             throw new Error("Unauthorized to update this expense");
+        }
+
+        if (updateData.amount !== undefined) {
+            if (!Number.isFinite(updateData.amount) || updateData.amount <= 0) {
+                throw new Error("Invalid expense amount");
+            }
         }
 
         // Handle category if provided

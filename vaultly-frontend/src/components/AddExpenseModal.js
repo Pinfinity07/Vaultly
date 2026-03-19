@@ -41,13 +41,19 @@ export default function AddExpenseModal({ isOpen, onClose, onExpenseAdded }) {
       return;
     }
 
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      toast.error('Amount must be a positive number.');
+      return;
+    }
+
     if (category === 'other' && !customCategory) {
       toast.error('Please enter a custom category name.');
       return;
     }
 
     const expenseData = {
-      amount: parseFloat(amount),
+      amount: numericAmount,
       categoryId: category === 'other' ? customCategory : category,
       date,
       description
@@ -106,6 +112,7 @@ export default function AddExpenseModal({ isOpen, onClose, onExpenseAdded }) {
               <input
                 type="number"
                 step="0.01"
+                min="0.01"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
