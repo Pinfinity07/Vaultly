@@ -1,5 +1,4 @@
-const {PrismaClient} = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../lib/prisma");
 
 async function createExpense({ userId, amount, categoryId, date, description, groupId = null }) {
     try{
