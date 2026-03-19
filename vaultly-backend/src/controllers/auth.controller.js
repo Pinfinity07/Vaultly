@@ -15,7 +15,7 @@ const COOKIE_OPTS = {
 
 async function signup(req,res) {
     try{
-        const { full_name, email, password, role } = req.body;
+        const { full_name, email, password } = req.body;
         if(!full_name || !email || !password){
             return res.status(400).json({ error: "Missing required fields" });
         }
@@ -26,7 +26,7 @@ async function signup(req,res) {
         }
 
         const passwordHash = await authService.hashPassword(password);
-        const newUser = await authService.createUser({ full_name, email, passwordHash, role: role || 'user' });
+        const newUser = await authService.createUser({ full_name, email, passwordHash, role: 'user' });
         const safeNewUser = safeUser(newUser);
 
         const accessToken = authService.generateAccessToken({ userId: newUser.id, role: newUser.role });

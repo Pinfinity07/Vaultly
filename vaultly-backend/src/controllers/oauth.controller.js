@@ -1,7 +1,16 @@
 const { google } = require('googleapis');
+const crypto = require('crypto');
 const { oauth2Client, scopes } = require('../config/oauth.config');
 const { generateAccessToken } = require('../services/auth.service');
 const prisma = require('../lib/prisma');
+
+const OAUTH_STATE_COOKIE = 'oauth_state';
+const OAUTH_STATE_COOKIE_OPTS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  maxAge: 10 * 60 * 1000,
+};
 
 const RETRY_DELAYS_MS = [400, 900];
 
@@ -37,16 +46,29 @@ async function withDbRetry(operation) {
 
 // Google OAuth - Redirect to Google
 const googleLogin = (req, res) => {
+  const state = crypto.randomBytes(24).toString('hex');
+  res.cookie(OAUTH_STATE_COOKIE, state, OAUTH_STATE_COOKIE_OPTS);
+
   const authorizeUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
-    scope: scopes
+    scope: scopes,
+    state,
   });
+
   res.redirect(authorizeUrl);
 };
 
 // Google OAuth - Callback
 const googleCallback = async (req, res) => {
-  const { code } = req.query;
+  const { code, state } = req.query;
+  const storedState = req.cookies?.[OAUTH_STATE_COOKIE];
+
+  if (!state || !storedState || state !== storedState) {
+    res.clearCookie(OAUTH_STATE_COOKIE, OAUTH_STATE_COOKIE_OPTS);
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=invalid_state`);
+  }
+
+  res.clearCookie(OAUTH_STATE_COOKIE, OAUTH_STATE_COOKIE_OPTS);
 
   if (!code) {
     return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=no_code`);

@@ -9,7 +9,7 @@ async function getSpendingOverview(req, res) {
         return res.status(200).json({ success: true, data: overview });
     } catch (error) {
         console.error('Get spending overview error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -22,7 +22,7 @@ async function getMonthlyTrends(req, res) {
         return res.status(200).json({ success: true, data: trends });
     } catch (error) {
         console.error('Get monthly trends error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -35,7 +35,7 @@ async function getTopExpenses(req, res) {
         return res.status(200).json({ success: true, data: expenses });
     } catch (error) {
         console.error('Get top expenses error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -47,7 +47,7 @@ async function getGroupAnalytics(req, res) {
         return res.status(200).json({ success: true, data: analytics });
     } catch (error) {
         console.error('Get group analytics error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -59,7 +59,7 @@ async function getGoalsProgress(req, res) {
         return res.status(200).json({ success: true, data: progress });
     } catch (error) {
         console.error('Get goals progress error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -72,7 +72,7 @@ async function getComparisonData(req, res) {
         return res.status(200).json({ success: true, data: comparison });
     } catch (error) {
         console.error('Get comparison data error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -102,7 +102,7 @@ async function getDashboardStats(req, res) {
         });
     } catch (error) {
         console.error('Get dashboard stats error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 

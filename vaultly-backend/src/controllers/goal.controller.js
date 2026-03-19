@@ -17,7 +17,7 @@ async function createGoal(req, res) {
         return res.status(201).json({ success: true, goal });
     } catch (error) {
         console.error('Create goal error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -28,7 +28,8 @@ async function getUserGoals(req, res) {
         const goals = await goalService.getUserGoals(userId);
         return res.status(200).json({ success: true, goals });
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        console.error('Get user goals error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -40,7 +41,8 @@ async function getGoalById(req, res) {
         const goal = await goalService.getGoalById(goalId, userId);
         return res.status(200).json({ success: true, goal });
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        console.error('Get goal by id error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -60,7 +62,7 @@ async function updateGoal(req, res) {
     } catch (error) {
         console.error('Update goal error:', error);
         const statusCode = error.message.includes('cannot be less than') ? 400 : 500;
-        return res.status(statusCode).json({ error: error.message });
+        return res.status(statusCode).json({ error: statusCode === 400 ? error.message : 'Internal server error' });
     }
 }
 
@@ -73,7 +75,7 @@ async function deleteGoal(req, res) {
         return res.status(200).json({ success: true, message: 'Goal deleted successfully' });
     } catch (error) {
         console.error('Delete goal error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -91,7 +93,7 @@ async function contributeToGoal(req, res) {
         return res.status(200).json({ success: true, goal });
     } catch (error) {
         console.error('Contribute to goal error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 

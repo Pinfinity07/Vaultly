@@ -13,7 +13,7 @@ async function createExpense(req, res) {
         return res.status(201).json({ expense });
     }catch(error){
         console.error('Create expense error:', error);
-        return res.status(500).json({error: error.message});
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -43,7 +43,8 @@ async function getUserExpenses(req, res) {
         });
         return res.status(200).json(result);
     }catch(error){
-        return res.status(500).json({error: error.message});
+        console.error('Get expenses error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -60,7 +61,7 @@ async function deleteExpense(req, res) {
         return res.status(200).json({ message: 'Expense deleted successfully' });
     } catch (error) {
         console.error('Delete expense error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -78,7 +79,7 @@ async function updateExpense(req, res){
         return res.status(200).json({ expense: updatedExpense });
     }catch(error){
         console.error('Update expense error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 

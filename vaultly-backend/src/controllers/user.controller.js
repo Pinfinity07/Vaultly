@@ -17,7 +17,7 @@ async function getUserById(req, res) {
         if (error.message.includes('not found')) {
             return res.status(404).json({ error: error.message });
         }
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -46,7 +46,7 @@ async function updateUserById(req, res) {
         if (error.message.includes('already in use')) {
             return res.status(409).json({ error: error.message });
         }
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
