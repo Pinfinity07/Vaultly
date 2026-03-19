@@ -14,13 +14,16 @@ import SectionAnimator from "../components/SectionAnimator";
 export default function Home() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [warmingServer, setWarmingServer] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     let isMounted = true;
 
     // Wake up the server on page load
-    wakeUpServer();
+    wakeUpServer().finally(() => {
+      if (isMounted) setWarmingServer(false);
+    });
 
     // Avoid keeping login/signup in a long loading state during backend cold starts.
     const loadingFallback = setTimeout(() => {
@@ -67,22 +70,25 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100">
+    <main id="main-content" className="min-h-screen brand-wash brand-grid">
       <Toaster position="top-right" />
       {/* Navigation Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
+      <header className="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-emerald-100">
         <div className="px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="bg-linear-to-r from-blue-600 to-emerald-600 p-2 rounded-lg">
+            <div className="bg-linear-to-r from-emerald-700 to-blue-600 p-2 rounded-lg shadow-md shadow-emerald-700/20">
               <Wallet className="text-white" size={24} />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Vaultly</h1>
           </div>
-          <nav className="flex gap-4 items-center">
+          <nav className="flex gap-4 items-center" aria-label="Primary navigation">
             {loading ? (
-              <div className="animate-pulse flex gap-2">
-                <div className="h-10 w-20 bg-gray-200 rounded"></div>
-                <div className="h-10 w-24 bg-gray-200 rounded"></div>
+              <div className="flex flex-col items-end" aria-live="polite" aria-busy="true">
+                <div className="animate-pulse flex gap-2">
+                  <div className="h-10 w-20 bg-gray-200 rounded"></div>
+                  <div className="h-10 w-24 bg-gray-200 rounded"></div>
+                </div>
+                <span className="text-xs text-gray-500 mt-1">Preparing secure session...</span>
               </div>
             ) : user ? (
               <>
@@ -113,13 +119,18 @@ export default function Home() {
             )}
           </nav>
         </div>
+        {warmingServer && (
+          <div className="px-4 sm:px-6 lg:px-8 pb-2">
+            <p className="text-xs text-gray-500">Waking backend for first request. This can take a few seconds after inactivity.</p>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}
       <HeroSection />
 
       {/* Features Section */}
-      <section id="features" className="bg-white py-16 sm:py-24">
+      <section id="features" className="bg-white/90 py-16 sm:py-24">
         <SectionAnimator className="px-4 sm:px-6 lg:px-8" staggerChildren={true}>
           <div className="text-center mb-16">
             <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -166,7 +177,7 @@ export default function Home() {
       </section>
 
       {/* How It Works */}
-      <section className="bg-linear-to-br from-blue-50 to-emerald-50 py-16 sm:py-24">
+      <section className="bg-linear-to-br from-emerald-50 to-blue-50 py-16 sm:py-24">
         <SectionAnimator className="px-4 sm:px-6 lg:px-8" staggerChildren={true}>
           <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-16">
             Three Simple Steps
@@ -196,7 +207,7 @@ export default function Home() {
       </section>
 
       {/* Data Management Section */}
-      <section className="bg-white py-16 sm:py-24">
+      <section className="bg-white/90 py-16 sm:py-24">
         <SectionAnimator className="px-4 sm:px-6 lg:px-8" staggerChildren={true}>
           <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-4">
             Advanced Data Management
@@ -235,7 +246,7 @@ export default function Home() {
       </section>
 
       {/* Stats Section */}
-      <section className="bg-linear-to-r from-blue-50 via-emerald-50 to-blue-50 py-16 sm:py-24">
+      <section className="bg-linear-to-r from-emerald-50 via-teal-50 to-blue-50 py-16 sm:py-24">
         <SectionAnimator className="px-4 sm:px-6 lg:px-8">
           <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-16">
             Trusted by Growing Teams
@@ -249,7 +260,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-linear-to-r from-blue-600 to-emerald-600 py-16 sm:py-20">
+      <section className="bg-linear-to-r from-emerald-700 via-teal-700 to-blue-700 py-16 sm:py-20">
         <SectionAnimator className="px-4 sm:px-6 lg:px-8 text-center" animationType="slideUp">
           <h3 className="text-3xl sm:text-4xl font-bold text-white mb-6">
             Ready for Transparent Financial Collaboration?
@@ -258,10 +269,10 @@ export default function Home() {
             Join families, roommates, and friend groups managing finances together with confidence
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link href="/signup" className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:scale-105 transition duration-300 inline-block">
+            <Link href="/signup" className="bg-white text-emerald-700 px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:scale-105 transition duration-300 inline-block">
               Sign Up for Free
             </Link>
-            <Link href="/login" className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 hover:scale-105 transition duration-300 inline-block">
+            <Link href="/login" className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-emerald-800/40 hover:scale-105 transition duration-300 inline-block">
               Already Have an Account?
             </Link>
           </div>
@@ -269,12 +280,12 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12">
+      <footer className="bg-gray-950 text-gray-400 py-12">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-8">
             <div className="md:w-1/3">
               <div className="flex items-center gap-2 mb-4">
-                <div className="bg-linear-to-r from-blue-600 to-emerald-600 p-2 rounded-lg">
+                <div className="bg-linear-to-r from-emerald-700 to-blue-600 p-2 rounded-lg">
                   <Wallet className="text-white" size={20} />
                 </div>
                 <h4 className="text-white font-semibold">Vaultly</h4>
@@ -318,6 +329,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </div>
+    </main>
   );
 }
