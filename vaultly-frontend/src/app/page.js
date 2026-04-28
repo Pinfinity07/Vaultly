@@ -7,28 +7,19 @@ import { getCurrentUser, logout, wakeUpServer } from "../lib/api";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 import Card from "../components/home/Card";
-import AnimatedStat from "../components/home/AnimatedStat";
 import HeroSection from "../components/home/HeroSection";
 import SectionAnimator from "../components/SectionAnimator";
 
 export default function Home() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [warmingServer, setWarmingServer] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     let isMounted = true;
 
-    // Wake up the server on page load
-    wakeUpServer().finally(() => {
-      if (isMounted) setWarmingServer(false);
-    });
-
-    // Avoid keeping login/signup in a long loading state during backend cold starts.
-    const loadingFallback = setTimeout(() => {
-      if (isMounted) setLoading(false);
-    }, 1500);
+    // Keep this fire-and-forget so the page can render immediately
+    // in a logged-out state while the backend warms up.
+    void wakeUpServer();
 
     async function checkAuth() {
       try {
@@ -45,8 +36,7 @@ export default function Home() {
         }
       } finally {
         if (isMounted) {
-          clearTimeout(loadingFallback);
-          setLoading(false);
+          // no-op guard keeps async completion safe after unmount
         }
       }
     }
@@ -55,7 +45,6 @@ export default function Home() {
 
     return () => {
       isMounted = false;
-      clearTimeout(loadingFallback);
     };
   }, []);
 
@@ -82,15 +71,7 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-gray-900">Vaultly</h1>
           </div>
           <nav className="flex gap-4 items-center" aria-label="Primary navigation">
-            {loading ? (
-              <div className="flex flex-col items-end" aria-live="polite" aria-busy="true">
-                <div className="animate-pulse flex gap-2">
-                  <div className="h-10 w-20 bg-gray-200 rounded"></div>
-                  <div className="h-10 w-24 bg-gray-200 rounded"></div>
-                </div>
-                <span className="text-xs text-gray-500 mt-1">Preparing secure session...</span>
-              </div>
-            ) : user ? (
+            {user ? (
               <>
                 <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
                   <User className="text-gray-600" size={18} />
@@ -119,11 +100,6 @@ export default function Home() {
             )}
           </nav>
         </div>
-        {warmingServer && (
-          <div className="px-4 sm:px-6 lg:px-8 pb-2">
-            <p className="text-xs text-gray-500">Waking backend for first request. This can take a few seconds after inactivity.</p>
-          </div>
-        )}
       </header>
 
       {/* Hero Section */}
@@ -245,20 +221,6 @@ export default function Home() {
         </SectionAnimator>
       </section>
 
-      {/* Stats Section */}
-      <section className="bg-linear-to-r from-emerald-50 via-teal-50 to-blue-50 py-16 sm:py-24">
-        <SectionAnimator className="px-4 sm:px-6 lg:px-8">
-          <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-16">
-            Trusted by Growing Teams
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-4xl mx-auto">
-            <AnimatedStat number={500} label="Active Users" suffix="+" />
-            <AnimatedStat number={50} label="Teams Using Vaultly" suffix="K+" />
-            <AnimatedStat number={99} label="Uptime Guarantee" suffix="%" />
-          </div>
-        </SectionAnimator>
-      </section>
-
       {/* CTA Section */}
       <section className="bg-linear-to-r from-emerald-700 via-teal-700 to-blue-700 py-16 sm:py-20">
         <SectionAnimator className="px-4 sm:px-6 lg:px-8 text-center" animationType="slideUp">
@@ -305,27 +267,23 @@ export default function Home() {
               <div>
                 <h4 className="text-white font-semibold mb-4">Security</h4>
                 <ul className="text-sm space-y-2">
-                  <li><Link href="#" className="hover:text-white transition">JWT Authentication</Link></li>
-                  <li><Link href="#" className="hover:text-white transition">Role-Based Access</Link></li>
-                  <li><Link href="#" className="hover:text-white transition">Data Privacy</Link></li>
+                  <li><span>JWT Authentication</span></li>
+                  <li><span>Role-Based Access</span></li>
+                  <li><span>Data Privacy</span></li>
                 </ul>
               </div>
               <div>
                 <h4 className="text-white font-semibold mb-4">Resources</h4>
                 <ul className="text-sm space-y-2">
-                  <li><Link href="#" className="hover:text-white transition">Documentation</Link></li>
-                  <li><Link href="#" className="hover:text-white transition">API Reference</Link></li>
-                  <li><Link href="#" className="hover:text-white transition">Support</Link></li>
+                  <li><span>Documentation</span></li>
+                  <li><span>API Reference</span></li>
+                  <li><span>Support</span></li>
                 </ul>
               </div>
             </div>
           </div>
-          <div className="border-t border-gray-700 pt-8 flex flex-col sm:flex-row justify-between items-center">
+          <div className="border-t border-gray-700 pt-8 flex justify-center items-center">
             <p className="text-sm">© {new Date().getFullYear()} Vaultly. All rights reserved.</p>
-            <div className="flex gap-4 mt-4 sm:mt-0">
-              <Link href="#" className="text-gray-400 hover:text-white transition text-sm">Privacy Policy</Link>
-              <Link href="#" className="text-gray-400 hover:text-white transition text-sm">Terms of Service</Link>
-            </div>
           </div>
         </div>
       </footer>
