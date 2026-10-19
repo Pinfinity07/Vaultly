@@ -1,7 +1,7 @@
 const { google } = require('googleapis');
 const crypto = require('crypto');
 const { oauth2Client, scopes } = require('../config/oauth.config');
-const { generateAccessToken } = require('../services/auth.service');
+const { generateAccessToken, generateRefreshToken } = require('../services/auth.service');
 const prisma = require('../lib/prisma');
 
 const OAUTH_STATE_COOKIE = 'oauth_state';
@@ -125,15 +125,23 @@ const googleCallback = async (req, res) => {
       }
     }
 
-    // Generate JWT token
-    const token = generateAccessToken({ userId: user.id, email: user.email });
+    // Generate JWT tokens
+    const accessToken = generateAccessToken({ userId: user.id, role: user.role || 'user' });
+    const refreshToken = generateRefreshToken({ userId: user.id, role: user.role || 'user' });
 
-    // Set cookie and redirect
-    res.cookie('accessToken', token, {
+    // Set cookies and redirect
+    res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`);

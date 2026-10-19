@@ -9,6 +9,8 @@ authRouter.post("/signup", authLimiter, authController.signup)
 
 authRouter.post("/login", authLimiter, authController.login)
 
+authRouter.post("/refresh", authController.refreshToken)
+
 authRouter.post("/logout", authController.logout)
 
 authRouter.get("/me", authMiddleware.authenticate, authController.ifLoggedIn)

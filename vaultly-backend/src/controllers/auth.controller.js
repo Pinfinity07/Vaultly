@@ -6,12 +6,19 @@ function safeUser(user){
     return rest;
 }
 
-const COOKIE_OPTS = {
+const REFRESH_COOKIE_OPTS = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-}
+};
+
+const ACCESS_COOKIE_OPTS = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 15 * 60 * 1000 // 15 minutes
+};
 
 async function signup(req,res) {
     try{
@@ -30,7 +37,10 @@ async function signup(req,res) {
         const safeNewUser = safeUser(newUser);
 
         const accessToken = authService.generateAccessToken({ userId: newUser.id, role: newUser.role });
-        res.cookie("accessToken", accessToken, COOKIE_OPTS);
+        const refreshToken = authService.generateRefreshToken({ userId: newUser.id, role: newUser.role });
+
+        res.cookie("accessToken", accessToken, ACCESS_COOKIE_OPTS);
+        res.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTS);
 
         return res.status(201).json({ user: safeNewUser });
     }catch(err){
@@ -58,7 +68,10 @@ async function login(req,res){
 
         const safeUserData = safeUser(user);
         const accessToken = authService.generateAccessToken({ userId: user.id, role: user.role });
-        res.cookie("accessToken", accessToken, COOKIE_OPTS);
+        const refreshToken = authService.generateRefreshToken({ userId: user.id, role: user.role });
+
+        res.cookie("accessToken", accessToken, ACCESS_COOKIE_OPTS);
+        res.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTS);
 
         return res.status(200).json({ user: safeUserData });
     }catch(err){
@@ -67,8 +80,39 @@ async function login(req,res){
     }
 }
 
+async function refreshToken(req, res) {
+    try {
+        const token = req.cookies?.refreshToken;
+        if (!token) {
+            return res.status(401).json({ error: "Refresh token missing" });
+        }
+
+        const payload = authService.verifyRefreshToken(token);
+        if (!payload || !payload.userId) {
+            return res.status(401).json({ error: "Invalid or expired refresh token" });
+        }
+
+        const user = await authService.findUserById(payload.userId);
+        if (!user) {
+            return res.status(401).json({ error: "User no longer exists" });
+        }
+
+        const newAccessToken = authService.generateAccessToken({ userId: user.id, role: user.role });
+        const newRefreshToken = authService.generateRefreshToken({ userId: user.id, role: user.role });
+
+        res.cookie("accessToken", newAccessToken, ACCESS_COOKIE_OPTS);
+        res.cookie("refreshToken", newRefreshToken, REFRESH_COOKIE_OPTS);
+
+        return res.status(200).json({ success: true, user: safeUser(user) });
+    } catch (err) {
+        console.error("Refresh token error:", err);
+        return res.status(500).json({ error: "Failed to refresh token" });
+    }
+}
+
 async function logout(req,res){
-    res.clearCookie("accessToken", COOKIE_OPTS);
+    res.clearCookie("accessToken", ACCESS_COOKIE_OPTS);
+    res.clearCookie("refreshToken", REFRESH_COOKIE_OPTS);
     return res.status(200).json({ message: "Logged out successfully" });
 }
 
@@ -89,6 +133,7 @@ async function ifLoggedIn(req,res){
 module.exports = {
     signup,
     login,
+    refreshToken,
     logout,
     ifLoggedIn
 };
