@@ -13,12 +13,26 @@ const oauthRoutes = require("./routes/oauth.routes.js");
 const cors = require("cors");
 
 const app = express();
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://vaultly-one.vercel.app',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(cors({
-    origin: [
-        'http://localhost:3000',
-        'https://vaultly-one.vercel.app'
-    ],
-    credentials: true
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const isAllowed = allowedOrigins.includes(origin) || /^https:\/\/vaultly.*\.vercel\.app$/.test(origin);
+    if (isAllowed) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
+  exposedHeaders: ['Set-Cookie']
 }));
 
 app.use(express.json());
@@ -37,9 +51,11 @@ app.use("/groups", groupRoutes);
 app.use("/goals", goalRoutes);
 app.use("/analytics", analyticsRoutes);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+const PORT = process.env.PORT || 8000;
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
 
 module.exports = app;

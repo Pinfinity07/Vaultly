@@ -58,6 +58,11 @@ model Expenses {
   Categories  Categories @relation(fields: [categoryId], references: [id])
   Groups      Groups?     @relation(fields: [groupId], references: [id])
   Users       Users      @relation(fields: [userId], references: [id])
+
+  // Indexes for query performance
+  @@index([userId, date])
+  @@index([userId, categoryId])
+  @@index([groupId])
 }
 
 model GroupMembers {

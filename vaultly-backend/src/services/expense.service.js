@@ -6,15 +6,15 @@ async function createExpense({ userId, amount, categoryId, date, description, gr
             throw new Error("Invalid expense amount");
         }
 
-        // Find or create category by name
+        // Find or create category by name (case-insensitive)
+        const trimmedCategoryName = categoryId.trim();
         let category = await prisma.categories.findFirst({
-            where: { name: categoryId }
+            where: { name: { equals: trimmedCategoryName, mode: 'insensitive' } }
         });
 
         if (!category) {
-            // Create category if it doesn't exist
             category = await prisma.categories.create({
-                data: { name: categoryId }
+                data: { name: trimmedCategoryName }
             });
         }
 
@@ -209,16 +209,17 @@ async function updateExpense(expenseId, userId, updateData){
             }
         }
 
-        // Handle category if provided
+        // Handle category if provided (case-insensitive)
         let categoryId = expense.categoryId;
         if(updateData.categoryId){
+            const trimmedCat = updateData.categoryId.trim();
             let category = await prisma.categories.findFirst({
-                where: { name: updateData.categoryId }
+                where: { name: { equals: trimmedCat, mode: 'insensitive' } }
             });
 
             if (!category) {
                 category = await prisma.categories.create({
-                    data: { name: updateData.categoryId }
+                    data: { name: trimmedCat }
                 });
             }
             categoryId = category.id;

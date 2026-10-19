@@ -5,45 +5,28 @@ async function createGroup(userId, groupData) {
   try {
     const { name } = groupData;
 
-      // Create the group
-      const group = await prisma.groups.create({
-        data: {
-          name,
-          createdBy: userId,
-        },
-        include: {
-          Users: {
-            select: {
-              id: true,
-              full_name: true,
-              email: true,
-            },
+      // Create the group and add the creator as admin in a single atomic transaction
+      const group = await prisma.$transaction(async (tx) => {
+        const newGroup = await tx.groups.create({
+          data: {
+            name,
+            createdBy: userId,
           },
-          GroupMembers: {
-            include: {
-              Users: {
-                select: {
-                  id: true,
-                  full_name: true,
-                  email: true,
-                },
-              },
-            },
-          },
-        },
-      });
+        });
 
-      // Add the creator as an admin member
-      await prisma.groupMembers.create({
-        data: {
-          groupId: group.id,
-          userId: userId,
-          role: 'admin',
-        },
+        await tx.groupMembers.create({
+          data: {
+            groupId: newGroup.id,
+            userId: userId,
+            role: 'admin',
+          },
+        });
+
+        return newGroup;
       });
 
       // Fetch the complete group with members
-      const completeGroup = await this.getGroupById(group.id, userId);
+      const completeGroup = await getGroupById(group.id, userId);
 
       return {
         success: true,
@@ -376,21 +359,19 @@ async function deleteGroup(groupId, userId) {
         };
       }
 
-      // Delete all group members and expenses first (cascade)
-      await prisma.groupMembers.deleteMany({
-        where: { groupId: groupId },
-      });
-
-      // Update expenses to remove group association instead of deleting
-      await prisma.expenses.updateMany({
-        where: { groupId: groupId },
-        data: { groupId: null },
-      });
-
-      // Delete the group
-      await prisma.groups.delete({
-        where: { id: groupId },
-      });
+      // Delete all group members and un-associate expenses in an atomic transaction
+      await prisma.$transaction([
+        prisma.groupMembers.deleteMany({
+          where: { groupId: groupId },
+        }),
+        prisma.expenses.updateMany({
+          where: { groupId: groupId },
+          data: { groupId: null },
+        }),
+        prisma.groups.delete({
+          where: { id: groupId },
+        }),
+      ]);
 
       return {
         success: true,
