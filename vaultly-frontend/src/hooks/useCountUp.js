@@ -6,23 +6,26 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function useCountUp(targetNumber = 0, duration = 2.5) {
+export default function useCountUp(targetNumber = 0, duration = 2) {
   const ref = useRef(null);
   const numberRef = useRef({ value: 0 });
 
   useEffect(() => {
-    if (!ref.current) return;
+    const element = ref.current;
+    if (!element) return;
 
-    ScrollTrigger.create({
-      trigger: ref.current,
+    const currentNumber = numberRef.current;
+
+    const triggerInstance = ScrollTrigger.create({
+      trigger: element,
       onEnter: () => {
-        gsap.to(numberRef.current, {
+        gsap.to(currentNumber, {
           value: targetNumber,
-          duration: duration,
+          duration,
           ease: 'power2.out',
           onUpdate: () => {
-            if (ref.current) {
-              ref.current.textContent = Math.floor(numberRef.current.value);
+            if (element) {
+              element.textContent = Math.floor(currentNumber.value).toLocaleString();
             }
           },
         });
@@ -31,11 +34,8 @@ export default function useCountUp(targetNumber = 0, duration = 2.5) {
     });
 
     return () => {
-      ScrollTrigger.getAll().forEach((trigger) => {
-        if (trigger.trigger === ref.current) {
-          trigger.kill();
-        }
-      });
+      triggerInstance.kill();
+      gsap.killTweensOf(currentNumber);
     };
   }, [targetNumber, duration]);
 

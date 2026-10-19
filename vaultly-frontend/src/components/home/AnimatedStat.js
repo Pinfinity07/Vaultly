@@ -5,17 +5,17 @@ import useGsapAnimation from '../../hooks/useGsapAnimation';
 
 export default function AnimatedStat({ number, label, suffix = '' }) {
   const containerRef = useGsapAnimation('fadeInUp', {
-    scrollTrigger: { start: 'top 90%' },
+    scrollTrigger: { start: 'top 92%' },
   });
-  const numberRef = useCountUp(number, 2.5);
+  const numberRef = useCountUp(number, 1.8);
 
   return (
     <div ref={containerRef} className="text-center">
-      <div className="text-4xl sm:text-5xl font-bold text-transparent bg-linear-to-r from-blue-600 to-emerald-600 bg-clip-text">
+      <div className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight tabular-nums">
         <span ref={numberRef}>0</span>
         <span>{suffix}</span>
       </div>
-      <p className="text-gray-600 font-medium mt-2">{label}</p>
+      <p className="text-xs text-slate-500 font-medium mt-1 uppercase tracking-wider">{label}</p>
     </div>
   );
 }

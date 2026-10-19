@@ -1,27 +1,25 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Navigation from "../../components/Navigation";
-import CreateGroupModal from "../../components/CreateGroupModal";
-import AddMemberModal from "../../components/AddMemberModal";
-import Link from "next/link";
+import { useState, useEffect, useCallback } from 'react';
+import Navigation from '../../components/Navigation';
+import CreateGroupModal from '../../components/CreateGroupModal';
+import AddMemberModal from '../../components/AddMemberModal';
 import {
-  ChevronLeft,
-  Users,
+  Users2,
   Plus,
   UserPlus,
   Trash2,
-  DollarSign,
   Crown,
   ShieldCheck,
   X,
-} from "lucide-react";
+  Receipt
+} from 'lucide-react';
 import {
   getUserGroups,
   removeGroupMember,
   deleteGroup,
-} from "../../lib/api";
-import toast, { Toaster } from "react-hot-toast";
+} from '../../lib/api';
+import toast from 'react-hot-toast';
 
 export default function GroupsPage() {
   const [groups, setGroups] = useState([]);
@@ -30,221 +28,213 @@ export default function GroupsPage() {
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
 
-  useEffect(() => {
-    fetchGroups();
-  }, []);
-
-  const fetchGroups = async () => {
+  const fetchGroups = useCallback(async () => {
     try {
       const data = await getUserGroups();
-
-      if (data.success) {
-        setGroups(data.groups);
+      if (data?.success) {
+        setGroups(data.groups || []);
       } else {
-        toast.error(data.error || data.message || "Failed to load groups");
+        toast.error(data?.error || data?.message || 'Failed to load groups');
       }
     } catch (err) {
-      console.error("Error fetching groups:", err);
-      toast.error("Failed to load groups");
+      console.error('Error fetching groups:', err);
+      toast.error('Failed to load groups');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleGroupCreated = (newGroup) => {
+  useEffect(() => {
+    fetchGroups();
+  }, [fetchGroups]);
+
+  const handleGroupCreated = () => {
     fetchGroups();
   };
 
-  const handleMemberAdded = (member) => {
+  const handleMemberAdded = () => {
     fetchGroups();
   };
 
   const handleRemoveMember = async (groupId, memberId) => {
-    if (!confirm("Are you sure you want to remove this member?")) return;
+    if (!confirm('Remove this member from the group?')) return;
 
     try {
       const data = await removeGroupMember(groupId, memberId);
-
-      if (data.success) {
-        toast.success("Member removed successfully");
+      if (data?.success) {
+        toast.success('Member removed');
         fetchGroups();
       } else {
-        toast.error(data.error || data.message || "Failed to remove member");
+        toast.error(data?.error || data?.message || 'Failed to remove member');
       }
     } catch (err) {
-      console.error("Error removing member:", err);
-      toast.error("Failed to remove member");
+      console.error(err);
+      toast.error('Failed to remove member');
     }
   };
 
   const handleDeleteGroup = async (groupId) => {
-    if (!confirm("Are you sure you want to delete this group? This action cannot be undone."))
-      return;
+    if (!confirm('Delete this group? Associated group expense tags will be unlinked.')) return;
 
     try {
       const data = await deleteGroup(groupId);
-
-      if (data.success) {
-        toast.success("Group deleted successfully");
+      if (data?.success) {
+        toast.success('Group deleted');
         fetchGroups();
       } else {
-        toast.error(data.error || data.message || "Failed to delete group");
+        toast.error(data?.error || data?.message || 'Failed to delete group');
       }
     } catch (err) {
-      console.error("Error deleting group:", err);
-      toast.error("Failed to delete group");
+      console.error(err);
+      toast.error('Failed to delete group');
     }
   };
 
-  if (loading) {
-    return (
-      <>
-        <Navigation />
-        <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-6">
-          <div className="max-w-7xl mx-auto">
-            <p className="text-center text-gray-600 py-12">Loading groups...</p>
-          </div>
-        </div>
-      </>
-    );
-  }
-
   return (
-    <>
+    <div className="min-h-screen bg-slate-50/60 pb-16">
       <Navigation />
-      <Toaster position="top-right" />
-      <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Back to Dashboard */}
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 px-4 py-2 mb-4 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-          >
-            <ChevronLeft size={20} />
-            <span className="font-medium">Back to Dashboard</span>
-          </Link>
 
-          {/* Header */}
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Groups</h2>
-              <p className="text-gray-600 mt-1">Manage shared expenses with your groups</p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+              Shared Groups
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              Split bills, manage shared living expenses, and coordinate joint spending
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition shadow-xs self-start sm:self-auto"
+          >
+            <Plus size={16} strokeWidth={2.2} />
+            <span>Create Group</span>
+          </button>
+        </div>
+
+        {/* Content */}
+        {loading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-pulse">
+            <div className="h-64 bg-slate-200/80 rounded-2xl" />
+            <div className="h-64 bg-slate-200/80 rounded-2xl" />
+          </div>
+        ) : groups.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-10 text-center max-w-xl mx-auto space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center mx-auto border border-teal-100">
+              <Users2 size={26} strokeWidth={1.8} />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-lg font-bold text-slate-900">No active groups yet</h2>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Create a space for your roommates, trip buddies, or family to log shared expenditures together.
+              </p>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-blue-500 to-emerald-500 text-white rounded-lg hover:from-blue-600 hover:to-emerald-600 transition shadow-md hover:shadow-lg transform hover:scale-105"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition shadow-xs"
             >
-              <Plus size={20} />
-              <span className="font-medium">Create Group</span>
+              <Plus size={16} />
+              <span>Create Your First Group</span>
             </button>
           </div>
-
-          {/* Groups List */}
-          {groups.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-md p-12 text-center">
-              <Users size={64} className="mx-auto text-gray-300 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No groups yet</h3>
-              <p className="text-gray-500 mb-6">
-                Create your first group to start tracking shared expenses
-              </p>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-blue-500 to-emerald-500 text-white rounded-lg hover:from-blue-600 hover:to-emerald-600 transition"
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {groups.map((group) => (
+              <div 
+                key={group.id} 
+                className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 hover:border-slate-300 transition-all flex flex-col justify-between"
               >
-                <Plus size={20} />
-                <span>Create Your First Group</span>
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {groups.map((group) => (
-                <div key={group.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
-                  {/* Group Header */}
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-start gap-3">
-                      <div className="p-3 bg-linear-to-br from-blue-500 to-emerald-500 rounded-lg">
-                        <Users size={24} className="text-white" />
+                <div>
+                  {/* Card Header */}
+                  <div className="flex items-start justify-between pb-4 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-100 text-teal-700 flex items-center justify-center">
+                        <Users2 size={20} strokeWidth={2} />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900">{group.name}</h3>
-                        <p className="text-sm text-gray-500">
-                          Created by {group.creator.fullName}
+                        <h2 className="text-base font-bold text-slate-900 leading-tight">{group.name}</h2>
+                        <p className="text-[11px] text-slate-500">
+                          Created by {group.creator?.fullName || 'Owner'}
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => handleDeleteGroup(group.id)}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
-                      title="Delete group"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
+                      title="Delete Group"
+                      aria-label="Delete Group"
                     >
-                      <Trash2 size={20} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
 
-                  {/* Group Stats */}
-                  <div className="grid grid-cols-2 gap-4 mb-4 p-4 bg-linear-to-br from-slate-50 to-slate-100 rounded-lg">
+                  {/* Summary Metric Strip */}
+                  <div className="grid grid-cols-2 gap-3 my-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 text-xs">
                     <div>
-                      <p className="text-sm text-gray-600 flex items-center gap-1">
-                        <Users size={16} />
-                        Members
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">{group.memberCount}</p>
+                      <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-0.5">Members</span>
+                      <span className="text-lg font-bold text-slate-900 tabular-nums">{group.memberCount}</span>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 flex items-center gap-1">
-                        <DollarSign size={16} />
-                        Total Spent
-                      </p>
-                      <p className="text-2xl font-bold text-emerald-600">
-                        ${group.totalExpenses.toFixed(2)}
-                      </p>
+                      <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-0.5">Group Spend</span>
+                      <span className="text-lg font-bold text-teal-700 tabular-nums">${group.totalExpenses.toFixed(2)}</span>
                     </div>
                   </div>
 
-                  {/* Members List */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="font-semibold text-gray-900">Members</h4>
+                  {/* Members Section */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Members</h3>
                       <button
                         onClick={() => {
                           setSelectedGroup(group);
                           setShowAddMemberModal(true);
                         }}
-                        className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1"
+                        className="text-xs font-semibold text-teal-700 hover:text-teal-800 inline-flex items-center gap-1 hover:underline"
                       >
-                        <UserPlus size={16} />
-                        Add Member
+                        <UserPlus size={13} />
+                        <span>Invite Member</span>
                       </button>
                     </div>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
+
+                    <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                       {group.members.map((member) => (
                         <div
                           key={member.id}
-                          className="flex justify-between items-center p-2 bg-gray-50 rounded-lg"
+                          className="flex items-center justify-between p-2 rounded-lg bg-slate-50/70 border border-slate-100 text-xs"
                         >
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-linear-to-br from-blue-400 to-emerald-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                              {member.user.fullName.charAt(0).toUpperCase()}
+                            <div className="w-6 h-6 rounded-md bg-slate-800 text-white text-[10px] font-bold flex items-center justify-center">
+                              {member.user?.fullName?.charAt(0).toUpperCase() || 'U'}
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-gray-900">
-                                {member.user.fullName}
-                              </p>
-                              <p className="text-xs text-gray-500">{member.user.email}</p>
+                              <p className="font-semibold text-slate-800 leading-none">{member.user?.fullName}</p>
+                              <p className="text-[10px] text-slate-400 leading-tight mt-0.5">{member.user?.email}</p>
                             </div>
                           </div>
+
                           <div className="flex items-center gap-2">
-                            {member.role === "admin" ? (
-                              <Crown size={16} className="text-yellow-500" title="Admin" />
+                            {member.role === 'admin' ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60">
+                                <Crown size={11} />
+                                <span>Admin</span>
+                              </span>
                             ) : (
-                              <ShieldCheck size={16} className="text-gray-400" title="Member" />
+                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
+                                <ShieldCheck size={11} />
+                                <span>Member</span>
+                              </span>
                             )}
-                            {member.user.id !== group.createdBy && (
+
+                            {member.user?.id !== group.createdBy && (
                               <button
                                 onClick={() => handleRemoveMember(group.id, member.id)}
-                                className="p-1 text-red-500 hover:bg-red-50 rounded transition"
+                                className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
+                                title="Remove member"
+                                aria-label="Remove member"
                               >
-                                <X size={16} />
+                                <X size={13} />
                               </button>
                             )}
                           </div>
@@ -252,46 +242,41 @@ export default function GroupsPage() {
                       ))}
                     </div>
                   </div>
+                </div>
 
-                  {/* Recent Expenses */}
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Recent Expenses</h4>
-                    {group.expenses.length === 0 ? (
-                      <p className="text-sm text-gray-500 text-center py-4">No expenses yet</p>
-                    ) : (
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
-                        {group.expenses.slice(0, 5).map((expense) => (
-                          <div
-                            key={expense.id}
-                            className="flex justify-between items-center p-2 bg-gray-50 rounded-lg text-sm"
-                          >
-                            <div>
-                              <p className="font-medium text-gray-900">{expense.description}</p>
-                              <p className="text-xs text-gray-500">
-                                by {expense.user.fullName} • {expense.category.name}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-semibold text-emerald-600">
-                                ${expense.amount.toFixed(2)}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {new Date(expense.date).toLocaleDateString()}
-                              </p>
+                {/* Recent Group Expenses */}
+                <div className="pt-4 border-t border-slate-100">
+                  <h3 className="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Recent Group Charges</h3>
+                  {group.expenses.length === 0 ? (
+                    <p className="text-xs text-slate-400 py-3 text-center">No group expenses recorded yet</p>
+                  ) : (
+                    <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+                      {group.expenses.slice(0, 4).map((expense) => (
+                        <div
+                          key={expense.id}
+                          className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 text-xs"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Receipt size={14} className="text-slate-400 shrink-0" />
+                            <div className="truncate max-w-[180px]">
+                              <p className="font-medium text-slate-900 leading-tight truncate">{expense.description || expense.category?.name}</p>
+                              <p className="text-[10px] text-slate-400">by {expense.user?.fullName}</p>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                          <div className="text-right tabular-nums">
+                            <span className="font-bold text-slate-900">${expense.amount.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
 
-      {/* Modals */}
       <CreateGroupModal 
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -307,6 +292,6 @@ export default function GroupsPage() {
         onMemberAdded={handleMemberAdded}
         group={selectedGroup}
       />
-    </>
+    </div>
   );
 }

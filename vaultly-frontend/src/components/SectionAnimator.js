@@ -10,55 +10,51 @@ export default function SectionAnimator({ children, className = '', animationTyp
   const ref = useRef(null);
 
   useEffect(() => {
-    if (!ref.current) return;
+    const element = ref.current;
+    if (!element) return;
 
     const animations = {
       fadeIn: {
         from: { opacity: 0 },
-        to: { opacity: 1, duration: 0.7, ease: 'power1.inOut' },
+        to: { opacity: 1, duration: 0.6, ease: 'power1.inOut' },
       },
       slideUp: {
-        from: { opacity: 0, y: 40 },
-        to: { opacity: 1, y: 0, duration: 0.9, ease: 'power2.inOut' },
+        from: { opacity: 0, y: 24 },
+        to: { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' },
       },
       slideInLeft: {
-        from: { opacity: 0, x: -60 },
-        to: { opacity: 1, x: 0, duration: 0.9, ease: 'power2.inOut' },
+        from: { opacity: 0, x: -24 },
+        to: { opacity: 1, x: 0, duration: 0.6, ease: 'power2.out' },
       },
     };
 
     const animation = animations[animationType] || animations.fadeIn;
 
-    // Stagger children if enabled
     if (staggerChildren) {
-      const children = ref.current.querySelectorAll('[data-animate]');
+      const childElements = element.querySelectorAll('[data-animate]');
       gsap.fromTo(
-        children,
+        childElements,
         animation.from,
         {
           ...animation.to,
-          stagger: 0.12,
+          stagger: 0.08,
           scrollTrigger: {
-            trigger: ref.current,
-            start: 'top 95%',
-            end: 'top 60%',
+            trigger: element,
+            start: 'top 90%',
             toggleActions: 'play none none none',
             once: true,
-            markers: false,
           },
           immediateRender: false,
         }
       );
     } else {
-      gsap.fromTo(ref.current, animation.from, {
+      gsap.fromTo(element, animation.from, {
         ...animation.to,
         scrollTrigger: {
-          trigger: ref.current,
-          start: 'top 95%',
-          end: 'top 60%',
+          trigger: element,
+          start: 'top 90%',
           toggleActions: 'play none none none',
           once: true,
-          markers: false,
         },
         immediateRender: false,
       });
@@ -66,7 +62,7 @@ export default function SectionAnimator({ children, className = '', animationTyp
 
     return () => {
       ScrollTrigger.getAll().forEach((trigger) => {
-        if (trigger.trigger === ref.current) {
+        if (trigger.trigger === element) {
           trigger.kill();
         }
       });
@@ -79,4 +75,3 @@ export default function SectionAnimator({ children, className = '', animationTyp
     </div>
   );
 }
-

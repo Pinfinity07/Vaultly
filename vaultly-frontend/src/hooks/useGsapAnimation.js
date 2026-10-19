@@ -10,32 +10,25 @@ export default function useGsapAnimation(animationType = 'fadeInUp', options = {
   const ref = useRef(null);
 
   useEffect(() => {
-    if (!ref.current) return;
+    const element = ref.current;
+    if (!element) return;
 
     const animations = {
       fadeInUp: {
-        from: { opacity: 0, y: 60 },
-        to: { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' },
+        from: { opacity: 0, y: 24 },
+        to: { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' },
       },
       fadeInScale: {
-        from: { opacity: 0, scale: 0.8 },
-        to: { opacity: 1, scale: 1, duration: 0.8, ease: 'back.out(1.2)' },
+        from: { opacity: 0, y: 16 },
+        to: { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' },
       },
       slideInLeft: {
-        from: { opacity: 0, x: -100 },
-        to: { opacity: 1, x: 0, duration: 1, ease: 'power3.out' },
+        from: { opacity: 0, x: -30 },
+        to: { opacity: 1, x: 0, duration: 0.6, ease: 'power2.out' },
       },
       slideInRight: {
-        from: { opacity: 0, x: 100 },
-        to: { opacity: 1, x: 0, duration: 1, ease: 'power3.out' },
-      },
-      rotateIn: {
-        from: { opacity: 0, rotation: -10, scale: 0.9 },
-        to: { opacity: 1, rotation: 0, scale: 1, duration: 0.8, ease: 'back.out(1.5)' },
-      },
-      staggerFade: {
-        from: { opacity: 0, y: 30 },
-        to: { opacity: 1, y: 0, duration: 0.6, stagger: 0.15, ease: 'power2.out' },
+        from: { opacity: 0, x: 30 },
+        to: { opacity: 1, x: 0, duration: 0.6, ease: 'power2.out' },
       },
     };
 
@@ -43,13 +36,13 @@ export default function useGsapAnimation(animationType = 'fadeInUp', options = {
     const config = { ...animation.to, ...options };
 
     if (options.immediateRender !== false && !options.scrollTrigger) {
-      gsap.fromTo(ref.current, animation.from, config);
+      gsap.fromTo(element, animation.from, config);
     } else {
-      gsap.fromTo(ref.current, animation.from, {
+      gsap.fromTo(element, animation.from, {
         ...config,
         scrollTrigger: {
-          trigger: ref.current,
-          start: 'top 80%',
+          trigger: element,
+          start: 'top 88%',
           toggleActions: 'play none none none',
           once: true,
           ...options.scrollTrigger,
@@ -58,9 +51,9 @@ export default function useGsapAnimation(animationType = 'fadeInUp', options = {
     }
 
     return () => {
-      gsap.killTweensOf(ref.current);
+      gsap.killTweensOf(element);
       ScrollTrigger.getAll().forEach((trigger) => {
-        if (trigger.trigger === ref.current) {
+        if (trigger.trigger === element) {
           trigger.kill();
         }
       });

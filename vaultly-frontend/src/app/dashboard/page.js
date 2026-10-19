@@ -1,295 +1,60 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Wallet, BarChart3, Users, Receipt, FileText, Target, TrendingUp, TrendingDown, Plus, ArrowUpRight, Eye, EyeOff, LogOut, User, UtensilsCrossed, Car, Clapperboard, Lightbulb, ShoppingCart, Stethoscope, DollarSign } from "lucide-react";
-import { getCurrentUser, logout, getUserExpenses, createExpense } from "../../lib/api";
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  Plus, 
+  Eye, 
+  EyeOff, 
+  UtensilsCrossed, 
+  Car, 
+  Clapperboard, 
+  Lightbulb, 
+  ShoppingCart, 
+  Stethoscope, 
+  DollarSign,
+  ArrowUpRight,
+  Target,
+  Users2,
+  Receipt,
+  Calendar,
+  Sparkles,
+  PieChart
+} from "lucide-react";
+import { 
+  getCurrentUser, 
+  getDashboardStats, 
+  getUserExpenses, 
+  createExpense 
+} from "../../lib/api";
 import { useRouter } from "next/navigation";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
+import Navigation from "../../components/Navigation";
 import AddExpenseModal from "../../components/AddExpenseModal";
 
-// Sidebar Component
-function Sidebar({ expenses }) { //Quick Stats
-  // Calculate current month's total
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-  
-  const monthTotal = expenses
-    .filter(exp => {
-      const expDate = new Date(exp.date);
-      return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
-    })
-    .reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
-
-  const monthBudget = 3000; // You can make this dynamic later
-  const percentage = Math.min((monthTotal / monthBudget) * 100, 100);
-
-  return (
-    <div className="bg-white rounded-xl p-4 shadow-md sticky top-20 h-fit">
-      <div className="mb-6">
-        <div className="flex items-center gap-3">
-          <div className="bg-linear-to-r from-blue-600 to-emerald-600 p-2 rounded-md">
-            <Wallet className="text-white" size={20} />
-          </div>
-          <div>
-            <h4 className="text-lg text-black font-semibold">Vaultly</h4>
-            <p className="text-xs text-gray-500">Finance Dashboard</p>
-          </div>
-        </div>
-      </div>
-
-      <nav className="flex flex-col gap-2">
-        <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white bg-linear-to-r from-blue-600 to-emerald-600 hover:shadow-md transition">
-          <BarChart3 size={18} />
-          <span>Overview</span>
-        </Link>
-        <Link href="/expenses" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
-          <Receipt size={18} />
-          <span>Expenses</span>
-        </Link>
-        <Link href="/groups" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
-          <Users size={18} />
-          <span>Groups</span>
-        </Link>
-        <Link href="/goals" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
-          <Target size={18} />
-          <span>Goals</span>
-        </Link>
-        <Link href="/reports" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
-          <FileText size={18} />
-          <span>Reports</span>
-        </Link>
-      </nav>
-
-      <div className="border-t border-gray-200 mt-6 pt-6">
-        <p className="text-xs text-gray-500 font-medium mb-3">Quick Stats</p>
-        <div className="space-y-3 text-sm">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">This Month</span>
-            <span className="font-semibold text-gray-900">${monthTotal.toFixed(2)}</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div className="bg-linear-to-r from-blue-600 to-emerald-600 h-2 rounded-full" style={{ width: `${percentage}%` }}></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// KPI Card Component
-function KPICard({ icon: Icon, label, value, change, isPositive = true, color = "blue" }) {
-  const colorClasses = {
-    blue: "from-blue-50 to-blue-100 border-blue-200",
-    emerald: "from-emerald-50 to-emerald-100 border-emerald-200",
-    purple: "from-purple-50 to-purple-100 border-purple-200",
-    amber: "from-amber-50 to-amber-100 border-amber-200",
-  };
-
-  return (
-    <div className={`bg-linear-to-br ${colorClasses[color]} border rounded-xl p-6 hover:shadow-md transition`}>
-      <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-lg bg-linear-to-r ${color === "blue" ? "from-blue-600 to-blue-700" : color === "emerald" ? "from-emerald-600 to-emerald-700" : color === "purple" ? "from-purple-600 to-purple-700" : "from-amber-600 to-amber-700"} text-white`}>
-          <Icon size={20} />
-        </div>
-        <div className={`flex items-center gap-1 text-sm font-semibold ${isPositive ? "text-emerald-600" : "text-red-600"}`}>
-          {isPositive ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-          {change}%
-        </div>
-      </div>
-      <p className="text-gray-600 text-sm font-medium mb-1">{label}</p>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-    </div>
-  );
-}
-
-// Chart Component (Spending Trend based on real data)
-function SimpleChart({ expenses }) {
-  // Get last 6 months of data
-  const getMonthlyData = () => {
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const data = [];
-    const now = new Date();
-    
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const month = date.getMonth();
-      const year = date.getFullYear();
-      
-      const monthTotal = expenses
-        .filter(exp => {
-          const expDate = new Date(exp.date);
-          return expDate.getMonth() === month && expDate.getFullYear() === year;
-        })
-        .reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
-      
-      data.push({
-        month: monthNames[month],
-        value: monthTotal
-      });
-    }
-    
-    return data;
-  };
-
-  const data = getMonthlyData();
-  const maxValue = Math.max(...data.map(d => d.value), 1);
-
-  return (
-    <div className="bg-white rounded-xl p-6 shadow-md">
-      <h3 className="text-lg font-semibold text-gray-900 mb-6">Spending Trend (6 months)</h3>
-      <div className="flex items-end justify-between h-64 gap-2">
-        {data.map((d, i) => (
-          <div key={i} className="flex-1 flex flex-col items-center gap-2">
-            <div className="w-full bg-gray-200 rounded-t-lg overflow-hidden relative group">
-              <div
-                className="bg-linear-to-t from-blue-600 to-emerald-600 w-full transition-all duration-300 hover:opacity-80"
-                style={{ height: `${(d.value / maxValue) * 200}px`, minHeight: d.value > 0 ? '8px' : '0px' }}
-              ></div>
-              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
-                ${d.value.toFixed(2)}
-              </div>
-            </div>
-            <p className="text-xs text-gray-600 font-medium">{d.month}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Category Breakdown Component
-function CategoryBreakdown({ expenses }) {
-  // Calculate category totals
-  const categoryTotals = expenses.reduce((acc, exp) => {
-    const category = exp.category || 'Other';
-    acc[category] = (acc[category] || 0) + parseFloat(exp.amount);
-    return acc;
-  }, {});
-
-  const totalAmount = Object.values(categoryTotals).reduce((sum, val) => sum + val, 0);
-  
-  // Convert to array and sort by amount
-  const categories = Object.entries(categoryTotals)
-    .map(([name, amount]) => ({
-      name,
-      amount,
-      percentage: totalAmount > 0 ? Math.round((amount / totalAmount) * 100) : 0,
-      color: getCategoryColor(name)
-    }))
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, 5); // Top 5 categories
-
-  function getCategoryColor(category) {
-    const colors = {
-      'food': 'bg-blue-600',
-      'transport': 'bg-emerald-600',
-      'entertainment': 'bg-purple-600',
-      'utilities': 'bg-amber-600',
-      'shopping': 'bg-pink-600',
-      'healthcare': 'bg-red-600'
-    };
-    return colors[category.toLowerCase()] || 'bg-gray-600';
+function getCategoryIcon(category) {
+  const normalized = category?.toLowerCase() || '';
+  if (normalized.includes('food') || normalized.includes('dining')) {
+    return <UtensilsCrossed size={16} className="text-amber-600" />;
   }
-
-  if (categories.length === 0) {
-    return (
-      <div className="bg-white rounded-xl p-6 shadow-md">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Spending by Category</h3>
-        <p className="text-gray-500 text-center py-12">No expenses yet. Start adding expenses to see breakdown.</p>
-      </div>
-    );
+  if (normalized.includes('transport')) {
+    return <Car size={16} className="text-sky-600" />;
   }
-
-  return (
-    <div className="bg-white rounded-xl p-6 shadow-md">
-      <h3 className="text-lg font-semibold text-gray-900 mb-6">Spending by Category</h3>
-      <div className="space-y-4">
-        {categories.map((cat, i) => (
-          <div key={i}>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-700">{cat.name}</span>
-              <span className="text-sm font-semibold text-gray-900">${cat.amount.toFixed(2)}</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className={`${cat.color} h-2 rounded-full transition-all duration-300`} style={{ width: `${cat.percentage}%` }}></div>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">{cat.percentage}% of total</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Recent Transactions Component
-function RecentTransactions({ expenses }) {
-  // Get the 5 most recent expenses
-  const recentExpenses = [...expenses]
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 5);
-
-  const getRelativeDate = (dateString) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const diffTime = Math.abs(today - date);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return date.toLocaleDateString();
-  };
-
-  const getCategoryIcon = (category) => {
-    const icons = {
-      'food': <UtensilsCrossed size={20} className="text-orange-500" />,
-      'transport': <Car size={20} className="text-blue-500" />,
-      'entertainment': <Clapperboard size={20} className="text-purple-500" />,
-      'utilities': <Lightbulb size={20} className="text-yellow-500" />,
-      'shopping': <ShoppingCart size={20} className="text-pink-500" />,
-      'healthcare': <Stethoscope size={20} className="text-red-500" />
-    };
-    return icons[category?.toLowerCase()] || <DollarSign size={20} className="text-green-500" />;
-  };
-
-  if (recentExpenses.length === 0) {
-    return (
-      <div className="bg-white rounded-xl p-6 shadow-md">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Transactions</h3>
-          <Link href="/expenses" className="text-blue-600 hover:text-blue-700 text-sm font-medium">View All</Link>
-        </div>
-        <p className="text-gray-500 text-center py-12">No transactions yet. Add your first expense!</p>
-      </div>
-    );
+  if (normalized.includes('entertainment')) {
+    return <Clapperboard size={16} className="text-purple-600" />;
   }
-
-  return (
-    <div className="bg-white rounded-xl p-6 shadow-md">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Recent Transactions</h3>
-        <Link href="/expenses" className="text-blue-600 hover:text-blue-700 text-sm font-medium">View All</Link>
-      </div>
-      <div className="space-y-3">
-        {recentExpenses.map((exp) => (
-          <div key={exp.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center">{getCategoryIcon(exp.category)}</div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900">{exp.description || 'No description'}</p>
-                <p className="text-xs text-gray-500">{getRelativeDate(exp.date)}</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="font-semibold text-sm text-gray-900">-${parseFloat(exp.amount).toFixed(2)}</p>
-              <p className="text-xs text-gray-500">{exp.category}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  if (normalized.includes('utilities') || normalized.includes('bill')) {
+    return <Lightbulb size={16} className="text-yellow-600" />;
+  }
+  if (normalized.includes('shopping')) {
+    return <ShoppingCart size={16} className="text-rose-600" />;
+  }
+  if (normalized.includes('health')) {
+    return <Stethoscope size={16} className="text-emerald-600" />;
+  }
+  return <DollarSign size={16} className="text-teal-600" />;
 }
 
 export default function DashboardPage() {
@@ -297,311 +62,411 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [hideBalance, setHideBalance] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [expenses, setExpenses] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [recentExpenses, setRecentExpenses] = useState([]);
   const router = useRouter();
 
-  useEffect(() => {
-    async function fetchData() {
-      const userResponse = await getCurrentUser();
-      if (userResponse.error) {
+  const loadData = useCallback(async () => {
+    try {
+      const userRes = await getCurrentUser();
+      if (userRes?.error || !userRes?.user) {
         router.push('/login');
-      } else {
-        setUser(userResponse.user);
-        
-        // Fetch expenses - get all expenses for dashboard calculations
-        const expensesResponse = await getUserExpenses({ limit: 10000 });
-        if (!expensesResponse.error) {
-          setExpenses(expensesResponse.expenses || []);
-        }
+        return;
       }
+      setUser(userRes.user);
+
+      const [statsRes, expensesRes] = await Promise.all([
+        getDashboardStats(),
+        getUserExpenses({ page: 1, limit: 5 })
+      ]);
+
+      if (statsRes?.success && statsRes.data) {
+        setDashboardData(statsRes.data);
+      }
+      if (expensesRes?.expenses) {
+        setRecentExpenses(expensesRes.expenses);
+      }
+    } catch (err) {
+      console.error('Failed to load dashboard data:', err);
+      toast.error('Unable to fetch latest metrics');
+    } finally {
       setLoading(false);
     }
-    fetchData();
   }, [router]);
 
-  const handleLogout = async () => {
-    const response = await logout();
-    if (response.error) {
-      toast.error('Logout failed');
-    } else {
-      toast.success('Logged out successfully');
-      setTimeout(() => router.push('/login'), 1000);
-    }
-  };
+  useEffect(() => {
+    loadData();
+    const handleRemoteAdded = () => {
+      loadData();
+    };
+    window.addEventListener("expenseAdded", handleRemoteAdded);
+    return () => window.removeEventListener("expenseAdded", handleRemoteAdded);
+  }, [loadData]);
 
   const handleExpenseAdded = async (expenseData) => {
-    const response = await createExpense(expenseData);
-    if (response.error) {
-      toast.error('Failed to add expense');
+    const res = await createExpense(expenseData);
+    if (res?.error) {
+      toast.error(res.error || 'Failed to record expense');
       return;
     }
-    // Refetch expenses to update the dashboard
-    const expensesResponse = await getUserExpenses({ limit: 10000 });
-    if (!expensesResponse.error) {
-      setExpenses(expensesResponse.expenses || []);
-    }
-    toast.success('Expense added successfully!');
+    toast.success('Expense recorded successfully');
+    await loadData();
   };
-
-  // Calculate statistics
-  const calculateStats = () => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    const lastMonth = new Date(currentYear, currentMonth - 1, 1);
-    
-    // Current month expenses
-    const currentMonthExpenses = expenses.filter(exp => {
-      const expDate = new Date(exp.date);
-      return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
-    });
-    
-    // Last month expenses
-    const lastMonthExpenses = expenses.filter(exp => {
-      const expDate = new Date(exp.date);
-      return expDate.getMonth() === lastMonth.getMonth() && expDate.getFullYear() === lastMonth.getFullYear();
-    });
-    
-    // Current week (last 7 days)
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const currentWeekExpenses = expenses.filter(exp => new Date(exp.date) >= weekAgo);
-    
-    // Previous week
-    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-    const lastWeekExpenses = expenses.filter(exp => {
-      const expDate = new Date(exp.date);
-      return expDate >= twoWeeksAgo && expDate < weekAgo;
-    });
-    
-    const monthTotal = currentMonthExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
-    const lastMonthTotal = lastMonthExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
-    const weekTotal = currentWeekExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
-    const lastWeekTotal = lastWeekExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
-    const totalExpenses = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
-    
-    const monthChange = lastMonthTotal > 0 ? (((monthTotal - lastMonthTotal) / lastMonthTotal) * 100).toFixed(1) : 0;
-    const weekChange = lastWeekTotal > 0 ? (((weekTotal - lastWeekTotal) / lastWeekTotal) * 100).toFixed(1) : 0;
-    
-    return {
-      monthTotal,
-      weekTotal,
-      totalExpenses,
-      monthChange,
-      weekChange,
-      isMonthPositive: monthChange < 0, // Less spending is positive
-      isWeekPositive: weekChange < 0
-    };
-  };
-
-  const stats = calculateStats();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen bg-slate-50/70">
+        <Navigation />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-pulse space-y-6">
+          <div className="h-32 bg-slate-200/80 rounded-2xl" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="h-28 bg-slate-200/80 rounded-2xl" />
+            <div className="h-28 bg-slate-200/80 rounded-2xl" />
+            <div className="h-28 bg-slate-200/80 rounded-2xl" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 h-72 bg-slate-200/80 rounded-2xl" />
+            <div className="h-72 bg-slate-200/80 rounded-2xl" />
+          </div>
         </div>
       </div>
     );
   }
 
+  const overview = dashboardData?.overview || { totalAmount: 0, totalCount: 0, categoryBreakdown: [] };
+  const comparison = dashboardData?.comparison || { current: { amount: 0 }, previous: { amount: 0 }, change: { amount: 0, percentage: 0 } };
+  const trends = dashboardData?.trends || [];
+  const goalsProgress = dashboardData?.goalsProgress || { totalGoals: 0, completed: 0, totalSaved: 0, totalTarget: 0, overallProgress: 0 };
+  const groupAnalytics = dashboardData?.groupAnalytics || [];
+
+  const maxTrend = Math.max(...trends.map((t) => t.totalAmount || 0), 1);
+  const hasExpenses = overview.totalCount > 0 || recentExpenses.length > 0;
+  const isSpendingDown = comparison.change.percentage <= 0;
+
   return (
-    <>
-      <Toaster position="top-right" />
-      <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100">
-        {/* Top Bar */}
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="bg-linear-to-r from-blue-600 to-emerald-600 p-2 rounded-lg">
-                <Wallet className="text-white" size={20} />
-              </div>
-              <h1 className="text-xl font-bold text-gray-900">Vaultly</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="px-4 py-2 bg-linear-to-r from-blue-600 to-emerald-600 text-white rounded-lg font-medium hover:shadow-lg transition flex items-center gap-2 cursor-pointer"
-              >
-                <Plus size={18} />
-                Add Expense
-              </button>
-              {user && (
-                <div className="flex items-center gap-3">
-                  <Link href="/profile">
-                    <div className="flex items-center gap-3 bg-linear-to-r from-blue-50 to-emerald-50 border border-blue-200 rounded-lg px-4 py-2 hover:shadow-md transition cursor-pointer">
-                      <div className="bg-linear-to-r from-blue-600 to-emerald-600 p-2 rounded-full">
-                        <User className="text-white" size={16} />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-sm font-semibold text-gray-900">{user.full_name}</p>
-                      </div>
-                    </div>
-                  </Link>
-                  <div className="relative group">
-                    <button
-                      onClick={handleLogout}
-                      className="p-2 text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-lg transition"
-                    >
-                      <LogOut size={20} />
-                    </button>
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 delay-500 pointer-events-none">
-                      Logout
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+    <div className="min-h-screen bg-slate-50/60 pb-16">
+      <Navigation />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
+        {/* Top Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+              Overview
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              Financial performance & expense distribution for {user?.full_name || 'your account'}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition shadow-xs"
+            >
+              <Plus size={16} strokeWidth={2.2} />
+              <span>Record Expense</span>
+            </button>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Sidebar */}
-            <aside className="lg:col-span-1">
-              <Sidebar expenses={expenses} />
-            </aside>
-
-            {/* Main Dashboard Content */}
-            <main className="lg:col-span-3 space-y-6">
-            {expenses.length === 0 ? (
-              // Empty State for New Users
-              <div className="space-y-6">
-                {/* Welcome Card */}
-                <div className="bg-linear-to-r from-blue-600 to-emerald-600 rounded-xl p-8 text-white shadow-lg">
-                  <div className="text-center">
-                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                      <Wallet size={40} className="text-blue-900 stroke-[2.5]" />
-                    </div>
-                    <h2 className="text-3xl font-bold mb-2">Welcome to Vaultly! 🎉</h2>
-                    <p className="text-blue-100 mb-6">Start your financial journey by adding your first expense</p>
-                    <button 
-                      onClick={() => setIsModalOpen(true)}
-                      className="px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:shadow-xl hover:scale-105 transition-all duration-300 inline-flex items-center gap-2"
+        {!hasExpenses ? (
+          /* Clean, Professional Empty State (Zero Emojis) */
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-8 sm:p-12 text-center max-w-3xl mx-auto space-y-6">
+            <div className="w-16 h-16 rounded-2xl bg-teal-50 border border-teal-100 text-teal-700 flex items-center justify-center mx-auto shadow-xs">
+              <Sparkles size={28} strokeWidth={1.8} />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-slate-900 tracking-tight">Welcome to Vaultly</h2>
+              <p className="text-sm text-slate-500 max-w-md mx-auto">
+                Begin managing your personal and shared group finances. Log your first expense or establish a savings target to populate your analytics.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-left">
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/70">
+                <Receipt className="text-teal-600 mb-2" size={20} />
+                <h3 className="text-xs font-bold text-slate-900">Track Outlays</h3>
+                <p className="text-[11px] text-slate-500 mt-1">Categorize individual spending and monitor monthly budgets.</p>
+              </div>
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/70">
+                <Users2 className="text-sky-600 mb-2" size={20} />
+                <h3 className="text-xs font-bold text-slate-900">Shared Groups</h3>
+                <p className="text-[11px] text-slate-500 mt-1">Split rent, vacations, or household utilities seamlessly.</p>
+              </div>
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/70">
+                <Target className="text-purple-600 mb-2" size={20} />
+                <h3 className="text-xs font-bold text-slate-900">Savings Goals</h3>
+                <p className="text-[11px] text-slate-500 mt-1">Set progressive milestones and log contributions toward targets.</p>
+              </div>
+            </div>
+            <div className="pt-2">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition"
+              >
+                <Plus size={16} />
+                <span>Log Your First Transaction</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Top Stat Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+              {/* Card 1: Total Spending */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-5 relative overflow-hidden flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                    <span>Total Outflow</span>
+                    <button
+                      onClick={() => setHideBalance(!hideBalance)}
+                      className="p-1 rounded text-slate-400 hover:text-slate-600 transition"
+                      aria-label="Toggle amount visibility"
                     >
-                      <Plus size={20} />
-                      Add Your First Expense
+                      {hideBalance ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
-                </div>
-
-                {/* Getting Started Guide */}
-                <div className="bg-white rounded-xl p-8 shadow-lg">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Getting Started</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center p-6 bg-blue-50 rounded-xl border-2 border-blue-200 hover:shadow-md transition">
-                      <div className="bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                        <Receipt size={28} className="text-white" />
-                      </div>
-                      <h4 className="font-semibold text-gray-900 mb-2">Track Expenses</h4>
-                      <p className="text-sm text-gray-600">Add and categorize your daily expenses to see where your money goes</p>
-                    </div>
-                    <div className="text-center p-6 bg-emerald-50 rounded-xl border-2 border-emerald-200 hover:shadow-md transition">
-                      <div className="bg-emerald-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                        <Users size={28} className="text-white" />
-                      </div>
-                      <h4 className="font-semibold text-gray-900 mb-2">Create Groups</h4>
-                      <p className="text-sm text-gray-600">Split expenses with friends and family for trips or shared costs</p>
-                    </div>
-                    <div className="text-center p-6 bg-purple-50 rounded-xl border-2 border-purple-200 hover:shadow-md transition">
-                      <div className="bg-purple-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                        <Target size={28} className="text-white" />
-                      </div>
-                      <h4 className="font-semibold text-gray-900 mb-2">Set Goals</h4>
-                      <p className="text-sm text-gray-600">Create savings goals and track your progress towards achieving them</p>
-                    </div>
+                  <div className="text-2xl sm:text-3xl font-bold text-slate-900 tabular-nums tracking-tight">
+                    {hideBalance ? "••••••" : `$${overview.totalAmount.toFixed(2)}`}
                   </div>
                 </div>
-
-                {/* Quick Stats - Empty State */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-white rounded-xl p-6 shadow-md text-center">
-                    <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-                      <BarChart3 size={24} className="text-blue-600" />
-                    </div>
-                    <p className="text-gray-500 text-sm mb-1">Total Expenses</p>
-                    <p className="text-2xl font-bold text-gray-900">$0.00</p>
-                  </div>
-                  <div className="bg-white rounded-xl p-6 shadow-md text-center">
-                    <div className="bg-emerald-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-                      <Receipt size={24} className="text-emerald-600" />
-                    </div>
-                    <p className="text-gray-500 text-sm mb-1">Transactions</p>
-                    <p className="text-2xl font-bold text-gray-900">0</p>
-                  </div>
-                  <div className="bg-white rounded-xl p-6 shadow-md text-center">
-                    <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-                      <Target size={24} className="text-purple-600" />
-                    </div>
-                    <p className="text-gray-500 text-sm mb-1">Active Goals</p>
-                    <p className="text-2xl font-bold text-gray-900">0</p>
-                  </div>
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 mt-3">
+                  <span>Logged entries</span>
+                  <span className="font-semibold text-slate-800 tabular-nums">{overview.totalCount} transactions</span>
                 </div>
               </div>
-            ) : (
-              // Existing Dashboard with Data
-              <>
-                {/* Balance Card */}
-                <div className="bg-linear-to-r from-blue-600 to-emerald-600 rounded-xl p-8 text-white shadow-lg">
-                  <div className="flex justify-between items-start mb-12">
-                    <div>
-                      <p className="text-blue-100 text-sm font-medium mb-2">Total Expenses</p>
-                      <div className="flex items-center gap-3">
-                        <p className="text-4xl font-bold">{hideBalance ? "****" : `$${stats.totalExpenses.toFixed(2)}`}</p>
-                        <button onClick={() => setHideBalance(!hideBalance)} className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition">
-                          {hideBalance ? <EyeOff size={20} /> : <Eye size={20} />}
-                        </button>
-                      </div>
-                    </div>
-                    <div className="space-y-2 text-right">
-                      <div className={`flex items-center gap-2 justify-end ${stats.isMonthPositive ? 'text-emerald-100' : 'text-red-100'}`}>
-                        {stats.isMonthPositive ? <TrendingDown size={16} /> : <TrendingUp size={16} />}
-                        <span className="text-sm font-semibold">{Math.abs(stats.monthChange)}%</span>
-                      </div>
-                      <p className="text-blue-100 text-xs">vs last month</p>
+
+              {/* Card 2: Current Month Spending */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                    <span>This Month</span>
+                    <div className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                      isSpendingDown 
+                        ? 'text-teal-700 bg-teal-50 border border-teal-100' 
+                        : 'text-amber-700 bg-amber-50 border border-amber-100'
+                    }`}>
+                      {isSpendingDown ? <TrendingDown size={13} /> : <TrendingUp size={13} />}
+                      <span>{Math.abs(comparison.change.percentage).toFixed(1)}%</span>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-blue-100 text-xs font-medium mb-1">This Month</p>
-                      <p className="text-2xl font-bold">${stats.monthTotal.toFixed(2)}</p>
-                    </div>
-                    <div>
-                      <p className="text-blue-100 text-xs font-medium mb-1">This Week</p>
-                      <p className="text-2xl font-bold">${stats.weekTotal.toFixed(2)}</p>
-                    </div>
+                  <div className="text-2xl sm:text-3xl font-bold text-slate-900 tabular-nums tracking-tight">
+                    ${comparison.current.amount.toFixed(2)}
                   </div>
                 </div>
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 mt-3">
+                  <span>Previous month</span>
+                  <span className="font-semibold text-slate-800 tabular-nums">${comparison.previous.amount.toFixed(2)}</span>
+                </div>
+              </div>
 
-                {/* KPI Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <KPICard icon={TrendingUp} label="This Month" value={`$${stats.monthTotal.toFixed(2)}`} change={Math.abs(stats.monthChange)} isPositive={stats.isMonthPositive} color="blue" />
-                  <KPICard icon={TrendingDown} label="This Week" value={`$${stats.weekTotal.toFixed(2)}`} change={Math.abs(stats.weekChange)} isPositive={stats.isWeekPositive} color="emerald" />
+              {/* Card 3: Goals Summary */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                    <span>Goal Progress</span>
+                    <Link href="/goals" className="text-teal-700 hover:text-teal-800 text-[11px] font-semibold flex items-center gap-0.5">
+                      <span>View</span>
+                      <ArrowUpRight size={12} />
+                    </Link>
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-bold text-slate-900 tabular-nums tracking-tight">
+                    {goalsProgress.overallProgress.toFixed(0)}%
+                  </div>
+                </div>
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 mt-3">
+                  <span>Saved</span>
+                  <span className="font-semibold text-slate-800 tabular-nums">
+                    ${goalsProgress.totalSaved.toFixed(0)} / ${goalsProgress.totalTarget.toFixed(0)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 4: Active Groups */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                    <span>Shared Groups</span>
+                    <Link href="/groups" className="text-teal-700 hover:text-teal-800 text-[11px] font-semibold flex items-center gap-0.5">
+                      <span>View</span>
+                      <ArrowUpRight size={12} />
+                    </Link>
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-bold text-slate-900 tabular-nums tracking-tight">
+                    {groupAnalytics.length}
+                  </div>
+                </div>
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 mt-3">
+                  <span>Total group share</span>
+                  <span className="font-semibold text-slate-800 tabular-nums">
+                    ${groupAnalytics.reduce((s, g) => s + (g.userAmount || 0), 0).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Mid Grid: Spending Trends Bar Graph & Category Breakdown */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Trends Bar Graph (2 columns) */}
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-base font-bold text-slate-900 tracking-tight">Monthly Trajectory</h2>
+                    <p className="text-xs text-slate-500">Expenditure overview over the past 6 months</p>
+                  </div>
+                  <span className="text-xs font-medium text-slate-500">Aggregated server data</span>
                 </div>
 
-                {/* Charts Row */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <SimpleChart expenses={expenses} />
-                  <CategoryBreakdown expenses={expenses} />
+                {trends.length === 0 ? (
+                  <div className="h-56 flex items-center justify-center text-xs text-slate-400">
+                    No trend history available yet
+                  </div>
+                ) : (
+                  <div className="flex items-end justify-between h-56 gap-3 pt-6 border-b border-slate-100 pb-2">
+                    {trends.map((item, idx) => {
+                      const heightPercent = maxTrend > 0 ? (item.totalAmount / maxTrend) * 100 : 0;
+                      return (
+                        <div key={idx} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
+                          <div className="relative w-full flex justify-center items-end h-full">
+                            <div 
+                              className="w-full max-w-[42px] rounded-t-lg bg-slate-900 group-hover:bg-teal-600 transition-all duration-300 relative"
+                              style={{ 
+                                height: `${Math.max(6, heightPercent)}%` 
+                              }}
+                            >
+                              <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded-md bg-slate-900 text-white text-[10px] font-semibold tabular-nums whitespace-nowrap transition-opacity pointer-events-none shadow-md z-10">
+                                ${item.totalAmount.toFixed(2)}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">{item.month}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Category Breakdown (1 column) */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-base font-bold text-slate-900 tracking-tight">Category Split</h2>
+                    <PieChart size={16} className="text-slate-400" />
+                  </div>
+                  <p className="text-xs text-slate-500 mb-5">Top spending categories by proportion</p>
+
+                  {overview.categoryBreakdown.length === 0 ? (
+                    <div className="text-center py-12 text-xs text-slate-400">
+                      No categorical data logged
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {overview.categoryBreakdown.slice(0, 5).map((cat, i) => {
+                        const proportion = overview.totalAmount > 0 
+                          ? ((cat.amount / overview.totalAmount) * 100) 
+                          : 0;
+                        return (
+                          <div key={i} className="space-y-1.5">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="font-semibold text-slate-800">{cat.category}</span>
+                              <div className="flex items-center gap-1.5 tabular-nums">
+                                <span className="font-bold text-slate-900">${cat.amount.toFixed(2)}</span>
+                                <span className="text-[10px] text-slate-400">({proportion.toFixed(0)}%)</span>
+                              </div>
+                            </div>
+                            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                              <div 
+                                className="bg-teal-600 h-1.5 rounded-full transition-all duration-500"
+                                style={{ width: `${proportion}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
-                {/* Recent Transactions */}
-                <RecentTransactions expenses={expenses} />
-              </>
-            )}
-          </main>
-        </div>
-      </div>
-    </div>
-    
-      {/* Add Expense Modal */}
-      <AddExpenseModal 
+                <div className="pt-4 border-t border-slate-100 mt-4 text-center">
+                  <Link href="/reports" className="text-xs font-semibold text-teal-700 hover:text-teal-800 inline-flex items-center gap-1">
+                    <span>Open Detailed Analytics</span>
+                    <ArrowUpRight size={13} />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Section: Recent Transactions */}
+            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900 tracking-tight">Recent Activity</h2>
+                  <p className="text-xs text-slate-500">Latest entries posted to your account</p>
+                </div>
+                <Link
+                  href="/expenses"
+                  className="text-xs font-semibold text-teal-700 hover:text-teal-800 inline-flex items-center gap-1 hover:underline"
+                >
+                  <span>View All Records</span>
+                  <ArrowUpRight size={14} />
+                </Link>
+              </div>
+
+              {recentExpenses.length === 0 ? (
+                <div className="text-center py-8 text-xs text-slate-400">
+                  No recent activity found
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {recentExpenses.map((expense) => {
+                    const formattedDate = new Date(expense.date).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    });
+
+                    return (
+                      <div key={expense.id} className="py-3.5 flex items-center justify-between hover:bg-slate-50/60 rounded-xl px-2 transition-colors">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+                            {getCategoryIcon(expense.category)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900 leading-tight">
+                              {expense.description || expense.category}
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[11px] text-slate-500 font-medium">{formattedDate}</span>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium uppercase tracking-wider">
+                                {expense.category}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-slate-900 tabular-nums">
+                            -${parseFloat(expense.amount).toFixed(2)}
+                          </p>
+                          {expense.groupId && (
+                            <span className="text-[10px] text-teal-700 font-medium">Shared</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </main>
+
+      <AddExpenseModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onExpenseAdded={handleExpenseAdded}
       />
-    </>
+    </div>
   );
 }

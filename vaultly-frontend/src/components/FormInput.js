@@ -10,9 +10,9 @@ export default function FormInput({
   required = false 
 }) {
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
-        {label} {required && <span className="text-red-600">*</span>}
+    <div className="space-y-1.5">
+      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+        {label} {required && <span className="text-rose-500">*</span>}
       </label>
       <input
         type={type}
@@ -20,11 +20,11 @@ export default function FormInput({
         value={value}
         onChange={onChange}
         required={required}
-        className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition text-gray-900 placeholder:text-gray-400 bg-white ${
-          error ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'
+        className={`w-full px-3.5 py-2.5 rounded-xl border bg-slate-50/50 text-slate-900 text-sm focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-600/15 transition placeholder:text-slate-400 ${
+          error ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
         }`}
       />
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-xs text-rose-600 font-medium">{error}</p>}
     </div>
   );
 }

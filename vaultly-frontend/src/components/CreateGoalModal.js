@@ -1,6 +1,6 @@
-'use client'
+'use client';
+
 import { useState } from 'react';
-import { createGoal } from '../lib/api';
 import toast from 'react-hot-toast';
 import { X, Target, DollarSign, Calendar, FileText } from 'lucide-react';
 
@@ -13,36 +13,38 @@ export default function CreateGoalModal({ isOpen, onClose, onGoalCreated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (isSubmitting) return;
-    
+
     if (!name.trim() || !targetAmount) {
       toast.error('Goal name and target amount are required');
       return;
     }
 
-    if (parseFloat(targetAmount) <= 0) {
-      toast.error('Target amount must be positive');
+    const numericAmount = parseFloat(targetAmount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      toast.error('Target amount must be a positive number');
       return;
     }
 
     const goalData = {
-      name,
-      targetAmount: parseFloat(targetAmount),
+      name: name.trim(),
+      targetAmount: numericAmount,
       deadline: deadline || null,
-      description
+      description: description.trim(),
     };
 
     setIsSubmitting(true);
-    await onGoalCreated(goalData);
-    setIsSubmitting(false);
-    onClose();
-    
-    // Reset form
-    setName('');
-    setTargetAmount('');
-    setDeadline('');
-    setDescription('');
+    try {
+      await onGoalCreated(goalData);
+      onClose();
+      setName('');
+      setTargetAmount('');
+      setDeadline('');
+      setDescription('');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -57,51 +59,51 @@ export default function CreateGoalModal({ isOpen, onClose, onGoalCreated }) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn"
+      className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-opacity"
       onClick={handleClose}
     >
       <div 
-        className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative animate-slideUp"
+        className="bg-white rounded-2xl border border-slate-200/90 shadow-2xl w-full max-w-md p-6 relative overflow-hidden transition-all"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Create New Goal</h2>
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 tracking-tight">Create Savings Goal</h2>
+            <p className="text-xs text-slate-500">Define a target to monitor progress</p>
+          </div>
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            aria-label="Close modal"
           >
-            <X size={20} className="text-gray-600" />
+            <X size={18} />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Goal Name */}
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Goal Name <span className="text-red-600">*</span>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              Goal Name
             </label>
             <div className="relative">
-              <Target size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Target size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., New Laptop, Emergency Fund"
+                placeholder="e.g. Emergency Fund, New Tech, Vacation"
                 required
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition text-gray-900"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-600/15 transition-all text-sm"
               />
             </div>
           </div>
 
-          {/* Target Amount */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Target Amount <span className="text-red-600">*</span>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              Target Amount
             </label>
             <div className="relative">
-              <DollarSign size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">$</span>
               <input
                 type="number"
                 step="0.01"
@@ -110,58 +112,55 @@ export default function CreateGoalModal({ isOpen, onClose, onGoalCreated }) {
                 onChange={(e) => setTargetAmount(e.target.value)}
                 placeholder="0.00"
                 required
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition text-gray-900"
+                className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-600/15 transition-all text-sm font-semibold tabular-nums"
               />
             </div>
           </div>
 
-          {/* Deadline */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Deadline <span className="text-gray-500">(Optional)</span>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              Target Deadline <span className="text-slate-400 font-normal lowercase">(optional)</span>
             </label>
             <div className="relative">
-              <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Calendar size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <input
                 type="date"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition text-gray-900"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-600/15 transition-all text-sm"
               />
             </div>
           </div>
 
-          {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description <span className="text-gray-500">(Optional)</span>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              Description <span className="text-slate-400 font-normal lowercase">(optional)</span>
             </label>
             <div className="relative">
-              <FileText size={18} className="absolute left-3 top-3 text-gray-400" />
+              <FileText size={16} className="absolute left-3.5 top-3 text-slate-400 pointer-events-none" />
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Add notes about this goal..."
-                rows="3"
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition text-gray-900 resize-none"
+                placeholder="Purpose or notes about this milestone..."
+                rows={2}
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-600/15 transition-all text-sm resize-none"
               />
             </div>
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex items-center gap-2.5 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2.5 bg-linear-to-r from-blue-600 to-emerald-600 text-white rounded-lg font-medium hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors shadow-xs disabled:opacity-50"
             >
               {isSubmitting ? 'Creating...' : 'Create Goal'}
             </button>
