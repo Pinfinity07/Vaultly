@@ -1,4 +1,5 @@
-const API = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+const API = API_BASE_URL;
 
 // Wake up the server (for Render free tier or similar services)
 async function wakeUpServer() {
@@ -66,8 +67,82 @@ async function logout() {
   return response.json();
 }
 
+let refreshPromise = null;
+
+async function requestTokenRefresh() {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${API}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
+async function authFetch(url, options = {}) {
+  const reqOptions = {
+    ...options,
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  };
+
+  let response = await fetch(url, reqOptions);
+
+  if (response.status === 401) {
+    const isAuthRoute =
+      url.includes('/auth/refresh') ||
+      url.includes('/auth/login') ||
+      url.includes('/auth/signup') ||
+      url.includes('/auth/logout');
+
+    if (!isAuthRoute) {
+      const refreshed = await requestTokenRefresh();
+      if (refreshed) {
+        response = await fetch(url, reqOptions);
+      }
+    }
+  }
+
+  return response;
+}
+
+async function refreshToken() {
+  try {
+    const response = await fetch(`${API}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return { error: error.error || 'Failed to refresh token' };
+    }
+
+    return response.json();
+  } catch {
+    return { error: 'Network error refreshing token' };
+  }
+}
+
 async function getCurrentUser() {
-  const response = await fetch(`${API}/auth/me`, {
+  const response = await authFetch(`${API}/auth/me`, {
     method: "GET",
     credentials: "include",
   });
@@ -80,7 +155,7 @@ async function getCurrentUser() {
 }
 
 async function createExpense(expenseData) {
-  const response = await fetch(`${API}/expenses`, {
+  const response = await authFetch(`${API}/expenses`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -113,7 +188,7 @@ async function getUserExpenses(params = {}) {
   const queryString = queryParams.toString();
   const url = `${API}/expenses${queryString ? `?${queryString}` : ''}`;
 
-  const response = await fetch(url, {
+  const response = await authFetch(url, {
     method: "GET",
     credentials: "include",
   });
@@ -126,7 +201,7 @@ async function getUserExpenses(params = {}) {
 }
 
 async function deleteExpense(expenseId) {
-  const response = await fetch(`${API}/expenses/${expenseId}`, {
+  const response = await authFetch(`${API}/expenses/${expenseId}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -140,7 +215,7 @@ async function deleteExpense(expenseId) {
 }
 
 async function updateExpense(expenseId, updateData){
-  const response = await fetch(`${API}/expenses/${expenseId}`, {
+  const response = await authFetch(`${API}/expenses/${expenseId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -158,7 +233,7 @@ async function updateExpense(expenseId, updateData){
 }
 
 async function updateUser(userId, updateData) {
-  const response = await fetch(`${API}/users/${userId}`, {
+  const response = await authFetch(`${API}/users/${userId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -177,7 +252,7 @@ async function updateUser(userId, updateData) {
 
 // Group API functions
 async function getUserGroups() {
-  const response = await fetch(`${API}/groups`, {
+  const response = await authFetch(`${API}/groups`, {
     method: "GET",
     credentials: "include",
   });
@@ -190,7 +265,7 @@ async function getUserGroups() {
 }
 
 async function createGroup(groupData) {
-  const response = await fetch(`${API}/groups`, {
+  const response = await authFetch(`${API}/groups`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -208,7 +283,7 @@ async function createGroup(groupData) {
 }
 
 async function getGroupById(groupId) {
-  const response = await fetch(`${API}/groups/${groupId}`, {
+  const response = await authFetch(`${API}/groups/${groupId}`, {
     method: "GET",
     credentials: "include",
   });
@@ -222,7 +297,7 @@ async function getGroupById(groupId) {
 }
 
 async function updateGroup(groupId, updateData) {
-  const response = await fetch(`${API}/groups/${groupId}`, {
+  const response = await authFetch(`${API}/groups/${groupId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -240,7 +315,7 @@ async function updateGroup(groupId, updateData) {
 }
 
 async function deleteGroup(groupId) {
-  const response = await fetch(`${API}/groups/${groupId}`, {
+  const response = await authFetch(`${API}/groups/${groupId}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -254,7 +329,7 @@ async function deleteGroup(groupId) {
 }
 
 async function addGroupMember(groupId, memberData) {
-  const response = await fetch(`${API}/groups/${groupId}/members`, {
+  const response = await authFetch(`${API}/groups/${groupId}/members`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -272,7 +347,7 @@ async function addGroupMember(groupId, memberData) {
 }
 
 async function removeGroupMember(groupId, memberId) {
-  const response = await fetch(`${API}/groups/${groupId}/members/${memberId}`, {
+  const response = await authFetch(`${API}/groups/${groupId}/members/${memberId}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -288,7 +363,7 @@ async function removeGroupMember(groupId, memberId) {
 // Goals API
 async function getUserGoals() {
   try {
-    const response = await fetch(`${API}/goals`, {
+    const response = await authFetch(`${API}/goals`, {
       method: "GET",
       credentials: "include",
     });
@@ -306,7 +381,7 @@ async function getUserGoals() {
 
 async function createGoal(goalData) {
   try {
-    const response = await fetch(`${API}/goals`, {
+    const response = await authFetch(`${API}/goals`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -327,7 +402,7 @@ async function createGoal(goalData) {
 }
 
 async function getGoalById(goalId) {
-  const response = await fetch(`${API}/goals/${goalId}`, {
+  const response = await authFetch(`${API}/goals/${goalId}`, {
     method: "GET",
     credentials: "include",
   });
@@ -342,7 +417,7 @@ async function getGoalById(goalId) {
 
 async function updateGoal(goalId, updateData) {
   try {
-    const response = await fetch(`${API}/goals/${goalId}`, {
+    const response = await authFetch(`${API}/goals/${goalId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -364,7 +439,7 @@ async function updateGoal(goalId, updateData) {
 
 async function deleteGoal(goalId) {
   try {
-    const response = await fetch(`${API}/goals/${goalId}`, {
+    const response = await authFetch(`${API}/goals/${goalId}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -382,7 +457,7 @@ async function deleteGoal(goalId) {
 
 async function contributeToGoal(goalId, amount) {
   try {
-    const response = await fetch(`${API}/goals/${goalId}/contribute`, {
+    const response = await authFetch(`${API}/goals/${goalId}/contribute`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -409,7 +484,7 @@ async function getSpendingOverview(startDate, endDate) {
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     
-    const response = await fetch(`${API}/analytics/overview?${params.toString()}`, {
+    const response = await authFetch(`${API}/analytics/overview?${params.toString()}`, {
       method: "GET",
       credentials: "include",
     });
@@ -427,7 +502,7 @@ async function getSpendingOverview(startDate, endDate) {
 
 async function getMonthlyTrends(months = 6) {
   try {
-    const response = await fetch(`${API}/analytics/trends?months=${months}`, {
+    const response = await authFetch(`${API}/analytics/trends?months=${months}`, {
       method: "GET",
       credentials: "include",
     });
@@ -445,7 +520,7 @@ async function getMonthlyTrends(months = 6) {
 
 async function getTopExpenses(limit = 10) {
   try {
-    const response = await fetch(`${API}/analytics/top-expenses?limit=${limit}`, {
+    const response = await authFetch(`${API}/analytics/top-expenses?limit=${limit}`, {
       method: "GET",
       credentials: "include",
     });
@@ -463,7 +538,7 @@ async function getTopExpenses(limit = 10) {
 
 async function getGroupAnalytics() {
   try {
-    const response = await fetch(`${API}/analytics/groups`, {
+    const response = await authFetch(`${API}/analytics/groups`, {
       method: "GET",
       credentials: "include",
     });
@@ -481,7 +556,7 @@ async function getGroupAnalytics() {
 
 async function getGoalsProgressAnalytics() {
   try {
-    const response = await fetch(`${API}/analytics/goals`, {
+    const response = await authFetch(`${API}/analytics/goals`, {
       method: "GET",
       credentials: "include",
     });
@@ -499,7 +574,7 @@ async function getGoalsProgressAnalytics() {
 
 async function getComparisonData(period = 'month') {
   try {
-    const response = await fetch(`${API}/analytics/comparison?period=${period}`, {
+    const response = await authFetch(`${API}/analytics/comparison?period=${period}`, {
       method: "GET",
       credentials: "include",
     });
@@ -517,7 +592,7 @@ async function getComparisonData(period = 'month') {
 
 async function getDashboardStats() {
   try {
-    const response = await fetch(`${API}/analytics/dashboard`, {
+    const response = await authFetch(`${API}/analytics/dashboard`, {
       method: "GET",
       credentials: "include",
     });
@@ -534,6 +609,8 @@ async function getDashboardStats() {
 }
 
 export { 
+  authFetch,
+  refreshToken,
   login, 
   signup, 
   logout, 
