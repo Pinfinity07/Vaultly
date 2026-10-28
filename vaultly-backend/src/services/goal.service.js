@@ -172,7 +172,7 @@ async function contributeToGoal(goalId, userId, amount) {
             throw new Error("Unauthorized to contribute to this goal");
         }
 
-        if (amount <= 0) {
+        if (!Number.isFinite(amount) || amount <= 0) {
             throw new Error("Contribution amount must be positive");
         }
 

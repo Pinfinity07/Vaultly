@@ -83,13 +83,14 @@ async function contributeToGoal(req, res) {
     const { goalId } = req.params;
     const { amount } = req.body;
     const userId = req.userId;
+    const numericAmount = Number(amount);
 
-    if (!amount || amount <= 0) {
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
         return res.status(400).json({ error: 'Valid contribution amount is required' });
     }
 
     try {
-        const goal = await goalService.contributeToGoal(goalId, userId, parseFloat(amount));
+        const goal = await goalService.contributeToGoal(goalId, userId, numericAmount);
         return res.status(200).json({ success: true, goal });
     } catch (error) {
         console.error('Contribute to goal error:', error);

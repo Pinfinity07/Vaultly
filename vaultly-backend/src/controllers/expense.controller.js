@@ -36,9 +36,12 @@ async function getUserExpenses(req, res) {
     } = req.query;
 
     try{
+        const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+        const parsedLimit = Math.max(1, parseInt(limit, 10) || 10);
+
         const result = await expenseService.getUserExpenses(userId, {
-            page: parseInt(page),
-            limit: parseInt(limit),
+            page: parsedPage,
+            limit: parsedLimit,
             search,
             sortBy,
             sortOrder,

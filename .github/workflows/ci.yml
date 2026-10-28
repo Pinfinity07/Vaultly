@@ -30,10 +30,13 @@ jobs:
 
       - name: Generate Prisma Client
         run: npx prisma generate
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/vaultly_ci"
 
       - name: Run Backend Tests
         run: npm test
         env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/vaultly_ci"
           JWT_SECRET: "ci_test_secret_key"
           ACCESS_TOKEN_EXPIRY: "15m"
           NODE_ENV: "test"
