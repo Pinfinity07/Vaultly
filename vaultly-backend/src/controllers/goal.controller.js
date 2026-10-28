@@ -4,16 +4,18 @@ async function createGoal(req, res) {
     const { name, targetAmount, deadline, description } = req.body;
     const userId = req.userId;
 
-    if (!name || !targetAmount) {
+    const numericTarget = Number(targetAmount);
+
+    if (!name || targetAmount === undefined || targetAmount === null || targetAmount === '') {
         return res.status(400).json({ error: 'Name and target amount are required' });
     }
 
-    if (targetAmount <= 0) {
-        return res.status(400).json({ error: 'Target amount must be positive' });
+    if (!Number.isFinite(numericTarget) || numericTarget <= 0) {
+        return res.status(400).json({ error: 'Target amount must be a positive number' });
     }
 
     try {
-        const goal = await goalService.createGoal({ userId, name, targetAmount, deadline, description });
+        const goal = await goalService.createGoal({ userId, name, targetAmount: numericTarget, deadline, description });
         return res.status(201).json({ success: true, goal });
     } catch (error) {
         console.error('Create goal error:', error);
@@ -52,8 +54,12 @@ async function updateGoal(req, res) {
     const updateData = req.body;
 
     // Validate targetAmount if provided
-    if (updateData.targetAmount !== undefined && updateData.targetAmount <= 0) {
-        return res.status(400).json({ error: 'Target amount must be positive' });
+    if (updateData.targetAmount !== undefined) {
+        const numericTarget = Number(updateData.targetAmount);
+        if (!Number.isFinite(numericTarget) || numericTarget <= 0) {
+            return res.status(400).json({ error: 'Target amount must be a positive number' });
+        }
+        updateData.targetAmount = numericTarget;
     }
 
     try {
@@ -84,12 +90,14 @@ async function contributeToGoal(req, res) {
     const { amount } = req.body;
     const userId = req.userId;
 
-    if (!amount || amount <= 0) {
+    const numericAmount = Number(amount);
+
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
         return res.status(400).json({ error: 'Valid contribution amount is required' });
     }
 
     try {
-        const goal = await goalService.contributeToGoal(goalId, userId, parseFloat(amount));
+        const goal = await goalService.contributeToGoal(goalId, userId, numericAmount);
         return res.status(200).json({ success: true, goal });
     } catch (error) {
         console.error('Contribute to goal error:', error);

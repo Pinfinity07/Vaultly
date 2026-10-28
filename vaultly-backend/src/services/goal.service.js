@@ -176,13 +176,11 @@ async function contributeToGoal(goalId, userId, amount) {
             throw new Error("Contribution amount must be positive");
         }
 
-        // Allow over-contribution but cap currentAmount at reasonable limit
-        const newAmount = goal.currentAmount + amount;
-        
+        // Atomic increment to prevent lost-update race conditions
         const updatedGoal = await prisma.goals.update({
             where: { id: goalId },
             data: {
-                currentAmount: newAmount
+                currentAmount: { increment: amount }
             }
         });
 

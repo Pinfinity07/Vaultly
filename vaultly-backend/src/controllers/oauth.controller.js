@@ -1,6 +1,6 @@
 const { google } = require('googleapis');
 const crypto = require('crypto');
-const { oauth2Client, scopes } = require('../config/oauth.config');
+const { createOAuthClient, scopes } = require('../config/oauth.config');
 const { generateAccessToken, generateRefreshToken } = require('../services/auth.service');
 const prisma = require('../lib/prisma');
 
@@ -49,7 +49,7 @@ const googleLogin = (req, res) => {
   const state = crypto.randomBytes(24).toString('hex');
   res.cookie(OAUTH_STATE_COOKIE, state, OAUTH_STATE_COOKIE_OPTS);
 
-  const authorizeUrl = oauth2Client.generateAuthUrl({
+  const authorizeUrl = createOAuthClient().generateAuthUrl({
     access_type: 'offline',
     scope: scopes,
     state,
@@ -75,7 +75,8 @@ const googleCallback = async (req, res) => {
   }
 
   try {
-    // Exchange code for tokens
+    // Exchange code for tokens on a client scoped to this request
+    const oauth2Client = createOAuthClient();
     const { tokens } = await oauth2Client.getToken(code);
 
     // Set credentials

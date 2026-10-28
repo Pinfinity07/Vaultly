@@ -28,8 +28,12 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      # prisma.config.ts requires DATABASE_URL, but generate never connects;
+      # tests mock Prisma, so a placeholder is enough (no real DB in CI).
       - name: Generate Prisma Client
         run: npx prisma generate
+        env:
+          DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
 
       - name: Run Backend Tests
         run: npm test

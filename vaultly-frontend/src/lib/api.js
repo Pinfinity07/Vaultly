@@ -1,6 +1,17 @@
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 const API = API_BASE_URL;
 
+// The backend reports failures as { error } (groups use { message }); a
+// non-JSON body (e.g. a proxy error page) falls back to the generic message.
+async function readError(response, fallback) {
+  try {
+    const data = await response.json();
+    return data.error || data.message || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 // Wake up the server (for Render free tier or similar services)
 async function wakeUpServer() {
   try {
@@ -24,8 +35,7 @@ async function login(email, password) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    return { error: error.message || "Login failed" };
+    return { error: await readError(response, "Login failed") };
   }
 
   return response.json();
@@ -42,8 +52,7 @@ async function signup(userData) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    return { error: error.message || "Signup failed" };
+    return { error: await readError(response, "Signup failed") };
   }
 
   const data = await response.json();
@@ -60,8 +69,7 @@ async function logout() {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    return { error: error.message || "Logout failed" };
+    return { error: await readError(response, "Logout failed") };
   }
 
   return response.json();
@@ -131,8 +139,7 @@ async function refreshToken() {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || 'Failed to refresh token' };
+      return { error: await readError(response, 'Failed to refresh token') };
     }
 
     return response.json();
@@ -165,8 +172,7 @@ async function createExpense(expenseData) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    return { error: error.message || "Failed to create expense" };
+    return { error: await readError(response, "Failed to create expense") };
   }
 
   return response.json();
@@ -207,8 +213,7 @@ async function deleteExpense(expenseId) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    return { error: error.message || "Failed to delete expense" };
+    return { error: await readError(response, "Failed to delete expense") };
   }
 
   return response.json();
@@ -225,8 +230,7 @@ async function updateExpense(expenseId, updateData){
   });
 
   if(!response.ok){
-    const error = await response.json();
-    return { error: error.message || "Failed to update expense" };
+    return { error: await readError(response, "Failed to update expense") };
   }
 
   return response.json();
@@ -243,8 +247,7 @@ async function updateUser(userId, updateData) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    return { error: error.message || "Failed to update profile" };
+    return { error: await readError(response, "Failed to update profile") };
   }
 
   return response.json();
@@ -275,8 +278,7 @@ async function createGroup(groupData) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    return { error: error.message || "Failed to create group" };
+    return { error: await readError(response, "Failed to create group") };
   }
 
   return response.json();
@@ -289,8 +291,7 @@ async function getGroupById(groupId) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    return { error: error.message || "Failed to fetch group" };
+    return { error: await readError(response, "Failed to fetch group") };
   }
 
   return response.json();
@@ -307,8 +308,7 @@ async function updateGroup(groupId, updateData) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    return { error: error.message || "Failed to update group" };
+    return { error: await readError(response, "Failed to update group") };
   }
 
   return response.json();
@@ -321,8 +321,7 @@ async function deleteGroup(groupId) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    return { error: error.message || "Failed to delete group" };
+    return { error: await readError(response, "Failed to delete group") };
   }
 
   return response.json();
@@ -339,8 +338,7 @@ async function addGroupMember(groupId, memberData) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    return { error: error.message || "Failed to add member" };
+    return { error: await readError(response, "Failed to add member") };
   }
 
   return response.json();
@@ -353,8 +351,7 @@ async function removeGroupMember(groupId, memberId) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    return { error: error.message || "Failed to remove member" };
+    return { error: await readError(response, "Failed to remove member") };
   }
 
   return response.json();
@@ -369,8 +366,7 @@ async function getUserGoals() {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || error.message || "Failed to fetch goals" };
+      return { error: await readError(response, "Failed to fetch goals") };
     }
 
     return response.json();
@@ -391,8 +387,7 @@ async function createGoal(goalData) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || error.message || "Failed to create goal" };
+      return { error: await readError(response, "Failed to create goal") };
     }
 
     return response.json();
@@ -408,8 +403,7 @@ async function getGoalById(goalId) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    return { error: error.message || "Failed to fetch goal" };
+    return { error: await readError(response, "Failed to fetch goal") };
   }
 
   return response.json();
@@ -427,8 +421,7 @@ async function updateGoal(goalId, updateData) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || error.message || "Failed to update goal" };
+      return { error: await readError(response, "Failed to update goal") };
     }
 
     return response.json();
@@ -445,8 +438,7 @@ async function deleteGoal(goalId) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || error.message || "Failed to delete goal" };
+      return { error: await readError(response, "Failed to delete goal") };
     }
 
     return response.json();
@@ -467,8 +459,7 @@ async function contributeToGoal(goalId, amount) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || error.message || "Failed to contribute to goal" };
+      return { error: await readError(response, "Failed to contribute to goal") };
     }
 
     return response.json();
@@ -490,8 +481,7 @@ async function getSpendingOverview(startDate, endDate) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || error.message || "Failed to fetch overview" };
+      return { error: await readError(response, "Failed to fetch overview") };
     }
 
     return response.json();
@@ -508,8 +498,7 @@ async function getMonthlyTrends(months = 6) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || error.message || "Failed to fetch trends" };
+      return { error: await readError(response, "Failed to fetch trends") };
     }
 
     return response.json();
@@ -526,8 +515,7 @@ async function getTopExpenses(limit = 10) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || error.message || "Failed to fetch top expenses" };
+      return { error: await readError(response, "Failed to fetch top expenses") };
     }
 
     return response.json();
@@ -544,8 +532,7 @@ async function getGroupAnalytics() {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || error.message || "Failed to fetch group analytics" };
+      return { error: await readError(response, "Failed to fetch group analytics") };
     }
 
     return response.json();
@@ -562,8 +549,7 @@ async function getGoalsProgressAnalytics() {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || error.message || "Failed to fetch goals analytics" };
+      return { error: await readError(response, "Failed to fetch goals analytics") };
     }
 
     return response.json();
@@ -580,8 +566,7 @@ async function getComparisonData(period = 'month') {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || error.message || "Failed to fetch comparison" };
+      return { error: await readError(response, "Failed to fetch comparison") };
     }
 
     return response.json();
@@ -598,8 +583,7 @@ async function getDashboardStats() {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || error.message || "Failed to fetch dashboard stats" };
+      return { error: await readError(response, "Failed to fetch dashboard stats") };
     }
 
     return response.json();
