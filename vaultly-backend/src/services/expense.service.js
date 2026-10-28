@@ -6,6 +6,24 @@ async function createExpense({ userId, amount, categoryId, date, description, gr
             throw new Error("Invalid expense amount");
         }
 
+        // Only members (or the creator) of a group may log expenses against it
+        if (groupId) {
+            const group = await prisma.groups.findFirst({
+                where: {
+                    id: groupId,
+                    OR: [
+                        { createdBy: userId },
+                        { GroupMembers: { some: { userId } } }
+                    ]
+                },
+                select: { id: true }
+            });
+
+            if (!group) {
+                throw new Error("Not a member of this group");
+            }
+        }
+
         // Find or create category by name (case-insensitive)
         const trimmedCategoryName = categoryId.trim();
         let category = await prisma.categories.findFirst({

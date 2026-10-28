@@ -18,6 +18,9 @@ async function createExpense(req, res) {
         return res.status(201).json({ expense });
     }catch(error){
         console.error('Create expense error:', error);
+        if (error.message.includes('Not a member of this group')) {
+            return res.status(403).json({ error: 'You are not a member of this group' });
+        }
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
