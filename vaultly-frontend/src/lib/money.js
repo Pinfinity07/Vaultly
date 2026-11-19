@@ -28,6 +28,11 @@ function getFormatter(currency, compact) {
   return formatters.get(key);
 }
 
+/** currencySymbol('INR') -> "₹", for prefixes on amount inputs. */
+export function currencySymbol(currency = 'INR') {
+  return getFormatter(currency, false).formatToParts(0).find((p) => p.type === 'currency')?.value || currency;
+}
+
 /**
  * formatMoney(1234.5, { currency: 'INR' }) -> "₹1,234.50"
  * Options: currency, compact (axis labels), signed (prefix "+" or "-"), masked (privacy toggle).

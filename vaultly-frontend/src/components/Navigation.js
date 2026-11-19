@@ -29,6 +29,12 @@ export const NAV_ITEMS = [
   { href: "/reports", label: "Analytics", shortLabel: "Analytics", icon: BarChart3 },
 ];
 
+const OPEN_ADD_EXPENSE_EVENT = "vaultly:add-expense";
+
+export function openAddExpense() {
+  window.dispatchEvent(new CustomEvent(OPEN_ADD_EXPENSE_EVENT));
+}
+
 const isActive = (pathname, href) => pathname === href || pathname?.startsWith(`${href}/`);
 
 export default function Navigation() {
@@ -67,6 +73,13 @@ export default function Navigation() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // Pages open the shared Add expense dialog with openAddExpense() from this module.
+  useEffect(() => {
+    const handleOpen = () => setIsQuickExpenseOpen(true);
+    window.addEventListener(OPEN_ADD_EXPENSE_EVENT, handleOpen);
+    return () => window.removeEventListener(OPEN_ADD_EXPENSE_EVENT, handleOpen);
+  }, []);
+
   const handleQuickExpenseAdded = async (expenseData) => {
     try {
       const res = await createExpense(expenseData);
@@ -95,7 +108,7 @@ export default function Navigation() {
     }
   };
 
-  const openAddExpense = () => setIsQuickExpenseOpen(true);
+  const showAddExpense = () => setIsQuickExpenseOpen(true);
 
   return (
     <>
@@ -140,7 +153,7 @@ export default function Navigation() {
             </button>
 
             <div className="hidden lg:block">
-              <Button onClick={openAddExpense}>
+              <Button onClick={showAddExpense}>
                 <Plus size={16} aria-hidden="true" />
                 Add expense
               </Button>
@@ -155,7 +168,7 @@ export default function Navigation() {
 
       <button
         type="button"
-        onClick={openAddExpense}
+        onClick={showAddExpense}
         aria-label="Add expense"
         className="lg:hidden fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-white shadow-lg transition-[background-color,transform] duration-150 hover:bg-brand-strong active:scale-95 bottom-[calc(64px+16px+env(safe-area-inset-bottom))]"
       >
@@ -167,7 +180,7 @@ export default function Navigation() {
         onClose={() => setIsPaletteOpen(false)}
         onAddExpense={() => {
           setIsPaletteOpen(false);
-          openAddExpense();
+          showAddExpense();
         }}
         onLogout={handleLogout}
       />
