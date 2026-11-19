@@ -20,6 +20,8 @@ export default function ProfilePage() {
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ full_name: "", email: "" });
+  // Only asked for when the email changes; the API requires it for that.
+  const [currentPassword, setCurrentPassword] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -60,16 +62,23 @@ export default function ProfilePage() {
     const next = {};
     if (!formData.full_name.trim()) next.full_name = "Enter your name";
     if (!formData.email.trim()) next.email = "Enter your email";
+    const emailChanged = formData.email.trim() !== (user?.email || "");
+    if (emailChanged && !currentPassword) next.currentPassword = "Enter your current password to change your email";
     setErrors(next);
     if (Object.keys(next).length) return;
 
     setIsSaving(true);
     try {
-      const response = await updateUser(user.id, formData);
+      const response = await updateUser(user.id, {
+        full_name: formData.full_name.trim(),
+        email: formData.email.trim(),
+        ...(emailChanged && { currentPassword }),
+      });
       if (response?.error) {
         setErrors({ submit: response.error });
       } else if (response?.user) {
         setUser(response.user);
+        setCurrentPassword("");
         setIsEditing(false);
         toast.success("Details saved");
       }
@@ -80,6 +89,7 @@ export default function ProfilePage() {
 
   const handleCancel = () => {
     setFormData({ full_name: user?.full_name || "", email: user?.email || "" });
+    setCurrentPassword("");
     setErrors({});
     setIsEditing(false);
   };
@@ -129,6 +139,21 @@ export default function ProfilePage() {
               )}
               <Field label="Name" name="full_name" autoComplete="name" value={formData.full_name} onChange={handleInputChange} error={errors.full_name} autoFocus required />
               <Field label="Email" name="email" type="email" autoComplete="email" value={formData.email} onChange={handleInputChange} error={errors.email} required />
+              {formData.email.trim() !== (user?.email || "") && (
+                <Field
+                  label="Current password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(e) => {
+                    setCurrentPassword(e.target.value);
+                    if (errors.currentPassword) setErrors((prev) => ({ ...prev, currentPassword: "" }));
+                  }}
+                  error={errors.currentPassword}
+                  hint="Needed to change the email you sign in with."
+                  required
+                />
+              )}
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="ghost" onClick={handleCancel}>Cancel</Button>
                 <Button type="submit" loading={isSaving}>Save details</Button>

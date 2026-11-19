@@ -1,3 +1,4 @@
+const bcrypt = require("bcrypt");
 const prisma = require("../lib/prisma");
 
 async function getUserById(userId) {
@@ -41,7 +42,18 @@ async function updateUserById(userId, updateData) {
             dataToUpdate.full_name = updateData.full_name;
         }
         
-        if (updateData.email !== undefined) {
+        if (updateData.email !== undefined && updateData.email !== user.email) {
+            // Google sign-in matches accounts by email, so changing it must prove the
+            // account owner is here: a stolen session alone must not be able to repoint it.
+            if (!user.passwordHash) {
+                throw new Error("Email is managed by Google sign-in");
+            }
+            const passwordOk = typeof updateData.currentPassword === "string"
+                && await bcrypt.compare(updateData.currentPassword, user.passwordHash);
+            if (!passwordOk) {
+                throw new Error("Current password is incorrect");
+            }
+
             // Check if email is already taken by another user
             const existingUser = await prisma.users.findFirst({
                 where: {
