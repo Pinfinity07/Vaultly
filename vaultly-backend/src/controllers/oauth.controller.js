@@ -94,6 +94,13 @@ const googleCallback = async (req, res) => {
       throw new Error('No email found in Google user profile');
     }
 
+    // Accounts are matched by email below, so only trust an address Google has verified.
+    // Otherwise anyone could create a Google account with someone else's unverified
+    // address and be signed into that person's Vaultly account.
+    if (userInfo.verified_email !== true) {
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=unverified_email`);
+    }
+
     // Find or create user (with retry for transient DB cold-start/network failures).
     let user = await withDbRetry(() =>
       prisma.users.findUnique({
