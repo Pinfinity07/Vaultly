@@ -271,6 +271,7 @@ The app runs on `http://localhost:3000`.
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 | `GOOGLE_CALLBACK_URL` | OAuth redirect URI registered with Google (default `http://localhost:8000/auth/google/callback`) |
 | `FRONTEND_URL` | Frontend origin, used for CORS and post-login redirects |
+| `CORS_ORIGINS` | Optional. Extra exact origins allowed by CORS, comma-separated (for example a Vercel preview URL). Wildcards are not supported. |
 | `NODE_ENV` | Set to `production` to enable secure, cross-site cookies |
 
 **Frontend (`vaultly-frontend/.env.local`)**

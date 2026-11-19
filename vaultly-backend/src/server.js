@@ -13,17 +13,21 @@ const oauthRoutes = require("./routes/oauth.routes.js");
 const cors = require("cors");
 
 const app = express();
+// Exact origins only. Requests carry auth cookies, so a pattern such as
+// https://vaultly*.vercel.app would let anyone's Vercel project read users' data.
+// Add preview deployments through CORS_ORIGINS (comma-separated).
 const allowedOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
   'https://vaultly-one.vercel.app',
   process.env.FRONTEND_URL,
+  ...(process.env.CORS_ORIGINS || '').split(',').map((o) => o.trim()),
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    const isAllowed = allowedOrigins.includes(origin) || /^https:\/\/vaultly.*\.vercel\.app$/.test(origin);
+    const isAllowed = allowedOrigins.includes(origin);
     if (isAllowed) {
       return callback(null, true);
     }
