@@ -23,23 +23,7 @@ import MoneyText, { useFormatMoney } from "../../components/ui/MoneyText";
 import useCountUp from "../../hooks/useCountUp";
 import { usePreferences } from "../../lib/preferences";
 import { categoryColor, formatCategory } from "../../lib/categories";
-
-// The API labels months like "Nov 2026" and skips months with no spending; fill the last
-// six calendar months so gaps show as empty bars instead of disappearing.
-function lastSixMonths(trends) {
-  const totals = new Map(trends.map((t) => [t.month, t.totalAmount || 0]));
-  const now = new Date();
-  return Array.from({ length: 6 }, (_, i) => {
-    const date = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
-    const key = date.toLocaleDateString("en-US", { year: "numeric", month: "short" });
-    return {
-      key,
-      label: date.toLocaleDateString("en-US", { month: "short" }),
-      longLabel: date.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-      amount: totals.get(key) || 0,
-    };
-  });
-}
+import { lastSixMonths } from "../../lib/months";
 
 function formatDay(date) {
   return new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
