@@ -8,6 +8,7 @@ export default function Toaster() {
     <HotToaster
       position="bottom-right"
       gutter={8}
+      containerClassName="app-toaster"
       toastOptions={{
         duration: 4000,
         style: {

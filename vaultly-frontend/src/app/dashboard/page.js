@@ -147,7 +147,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-slate-50/60 pb-16">
       <Navigation />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
+      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
         {/* Top Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>

@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
 
-const SIZES = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg' };
+const SIZES = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-xl' };
 
 /**
  * Modal built on the native <dialog>: the browser traps focus, makes the page inert and
@@ -15,7 +15,7 @@ const SIZES = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg' };
  * </Dialog>
  * Give the first field `data-autofocus` to focus it on open.
  */
-export default function Dialog({ open, onClose, title, description, footer, size = 'md', children }) {
+export default function Dialog({ open, onClose, title, description, footer, size = 'md', bare = false, className = '', children }) {
   const ref = useRef(null);
   const returnFocusRef = useRef(null);
   const onCloseRef = useRef(onClose);
@@ -61,8 +61,15 @@ export default function Dialog({ open, onClose, title, description, footer, size
       onClick={(e) => {
         if (e.target === ref.current) onClose?.();
       }}
-      className={`ui-dialog m-auto w-[calc(100%-2rem)] ${SIZES[size]} max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-surface bg-surface p-0 text-ink shadow-xl`}
+      className={`ui-dialog m-auto w-[calc(100%-2rem)] ${SIZES[size]} max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-surface bg-surface p-0 text-ink shadow-xl ${className}`}
     >
+      {/* bare: the caller supplies the whole layout; the title stays as the accessible name. */}
+      {bare ? (
+        <>
+          <h2 id={titleId} className="sr-only">{title}</h2>
+          {children}
+        </>
+      ) : (
       <div className="p-6">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
@@ -80,7 +87,8 @@ export default function Dialog({ open, onClose, title, description, footer, size
         </div>
         {children}
       </div>
-      {footer && <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line px-6 py-4">{footer}</div>}
+      )}
+      {footer &&<div className="flex flex-wrap items-center justify-end gap-2 border-t border-line px-6 py-4">{footer}</div>}
     </dialog>
   );
 }

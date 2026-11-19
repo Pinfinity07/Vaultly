@@ -41,52 +41,77 @@
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-body {
-  background: var(--color-canvas);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
+/* Unlayered rules would beat every Tailwind utility, so base styles live in a layer. */
+@layer base {
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  main {
+    isolation: isolate;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: rgb(15 118 110 / 0.2);
+    color: var(--color-ink);
+  }
+
+  .skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -3rem;
+    z-index: 100;
+    background: var(--color-ink);
+    color: #fff;
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-control);
+  }
+
+  .skip-link:focus {
+    top: 1rem;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
 }
 
-main {
-  isolation: isolate;
+/* Below lg the app pages get a fixed bottom tab bar; keep content and toasts clear of it. */
+@media (max-width: 1023px) {
+  body:has(.mobile-tabbar) {
+    padding-bottom: calc(64px + 24px + env(safe-area-inset-bottom));
+  }
+
+  body:has(.mobile-tabbar) .app-toaster {
+    bottom: calc(64px + 16px + env(safe-area-inset-bottom)) !important;
+  }
 }
 
-h1,
-h2,
-h3 {
-  text-wrap: balance;
+/* Route change: short fade-in of the incoming page (app/template.js). */
+.route-fade {
+  animation: route-fade-in 180ms var(--ease-out-soft);
 }
 
-::selection {
-  background: rgb(15 118 110 / 0.2);
-  color: var(--color-ink);
-}
-
-.skip-link {
-  position: absolute;
-  left: 1rem;
-  top: -3rem;
-  z-index: 100;
-  background: var(--color-ink);
-  color: #fff;
-  padding: 0.6rem 0.9rem;
-  border-radius: var(--radius-control);
-}
-
-.skip-link:focus {
-  top: 1rem;
-}
-
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
-[tabindex]:focus-visible {
-  outline: 2px solid var(--color-brand);
-  outline-offset: 2px;
+@keyframes route-fade-in {
+  from {
+    opacity: 0;
+  }
 }
 
 /* Dialog: fades and rises 8px in, reverses on close. No JavaScript needed. */

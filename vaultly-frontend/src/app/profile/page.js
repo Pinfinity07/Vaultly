@@ -116,7 +116,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-slate-50/60 pb-16">
       <Navigation />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
+      <main id="main-content" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
         {/* Profile Header Card */}
         <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-slate-100">
