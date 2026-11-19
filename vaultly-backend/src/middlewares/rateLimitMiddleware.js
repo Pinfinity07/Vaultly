@@ -16,7 +16,17 @@ const oauthLimiter = rateLimit({
   message: { error: "Too many OAuth requests. Please try again later." },
 });
 
+// Profile updates check the current password when the email changes.
+const accountUpdateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many account changes. Please try again later." },
+});
+
 module.exports = {
   authLimiter,
   oauthLimiter,
+  accountUpdateLimiter,
 };

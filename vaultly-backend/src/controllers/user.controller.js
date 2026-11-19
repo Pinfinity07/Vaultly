@@ -46,6 +46,12 @@ async function updateUserById(req, res) {
         if (error.message.includes('already in use')) {
             return res.status(409).json({ error: error.message });
         }
+        if (error.message.includes('Current password is incorrect')) {
+            return res.status(403).json({ error: 'Your current password is incorrect' });
+        }
+        if (error.message.includes('managed by Google')) {
+            return res.status(400).json({ error: 'This account signs in with Google, so its email can only change in your Google account' });
+        }
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
