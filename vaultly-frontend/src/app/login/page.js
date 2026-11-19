@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Wallet2, Eye, EyeOff } from 'lucide-react';
 import FormInput from '../../components/FormInput';
 import { login, API_BASE_URL } from '../../lib/api';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -56,7 +56,6 @@ export default function LoginPage() {
 
   return (
     <>
-      <Toaster position="top-right" />
       <div className="min-h-screen bg-slate-50/60 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md space-y-6">
           {/* Brand Header */}

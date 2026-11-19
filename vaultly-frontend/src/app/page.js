@@ -51,7 +51,7 @@ export default function Home() {
   }, [router]);
 
   return (
-    <main id="main-content" className="min-h-screen bg-slate-50/50 brand-grid">
+    <main id="main-content" className="min-h-screen bg-slate-50/50">
       {/* Landing Navigation Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">

@@ -1,7 +1,4 @@
-'use client';
-
-import useGsapAnimation from '../../hooks/useGsapAnimation';
-
+// The parent SectionAnimator staggers these in via data-animate.
 export default function Card({ 
   icon, 
   title, 
@@ -9,13 +6,9 @@ export default function Card({
   number, 
   variant = 'feature'
 }) {
-  const ref = useGsapAnimation('fadeInScale', {
-    scrollTrigger: { start: 'top 92%' },
-  });
-
   if (variant === 'step') {
     return (
-      <div ref={ref} data-animate className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs relative overflow-hidden group hover:border-slate-300 transition-all">
+      <div data-animate className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs relative overflow-hidden group hover:border-slate-300 transition-all">
         <div className="w-10 h-10 rounded-xl bg-slate-900 text-white font-bold text-sm flex items-center justify-center mb-4 shadow-xs">
           {number}
         </div>
@@ -29,7 +22,6 @@ export default function Card({
 
   return (
     <div
-      ref={ref}
       data-animate
       className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs relative overflow-hidden group hover:border-slate-300 hover:shadow-sm transition-all"
     >

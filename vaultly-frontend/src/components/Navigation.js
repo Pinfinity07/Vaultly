@@ -17,7 +17,7 @@ import {
   Plus
 } from "lucide-react";
 import { getCurrentUser, logout, createExpense } from "../lib/api";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import AddExpenseModal from "./AddExpenseModal";
 
 const NAV_ITEMS = [
@@ -101,7 +101,6 @@ export default function Navigation() {
 
   return (
     <>
-      <Toaster position="top-right" />
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
