@@ -16,15 +16,29 @@ const plexMono = IBM_Plex_Mono({
   weight: ["400", "500"],
 });
 
+const description =
+  "Track your own spending and the costs you share with flatmates, see where the month went, and save toward goals.";
+
+// The icon (app/icon.svg) and share image (app/opengraph-image.js) come from file conventions.
 export const metadata = {
-  title: "Vaultly - Finance Tracker",
-  description: "Track and manage your expenses with advanced filters and analytics",
-  icons: {
-    icon: [
-      { url: '/favicon.ico' },
-      { url: '/icon.png', sizes: '32x32', type: 'image/png' },
-    ],
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://vaultly-one.vercel.app"),
+  title: {
+    default: "Vaultly · Track spending and split shared costs",
+    template: "%s · Vaultly",
   },
+  description,
+  openGraph: {
+    title: "Vaultly · Track spending and split shared costs",
+    description,
+    siteName: "Vaultly",
+    type: "website",
+  },
+  twitter: { card: "summary_large_image" },
+};
+
+export const viewport = {
+  themeColor: "#f8fafc",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }) {

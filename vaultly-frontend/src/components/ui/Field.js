@@ -28,6 +28,7 @@ export default function Field({
   id,
   className = '',
   prefix,
+  'aria-describedby': describedBy,
   ...props
 }) {
   const autoId = useId();
@@ -42,7 +43,7 @@ export default function Field({
     id: fieldId,
     required,
     'aria-invalid': error ? true : undefined,
-    'aria-describedby': [errorId, hintId].filter(Boolean).join(' ') || undefined,
+    'aria-describedby': [errorId, hintId, describedBy].filter(Boolean).join(' ') || undefined,
     className: [
       controlClasses(error),
       as === 'textarea' ? 'h-auto py-2 resize-y' : '',

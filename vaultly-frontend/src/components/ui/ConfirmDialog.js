@@ -11,7 +11,7 @@ import Button from './Button';
  */
 export default function ConfirmDialog({
   open,
-  title,
+  title = 'Are you sure?',
   description,
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
