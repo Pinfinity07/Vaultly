@@ -21,9 +21,9 @@ const FEATURES = [
   },
   {
     title: "Shared costs without the spreadsheet",
-    body: "Make a group for your flat or a trip, add the people in it, and see what the group has spent and who logged each bill.",
+    body: "Make a group for your flat or a trip, add the people in it, and see who paid for what and who owes whom.",
     image: "/product/groups.webp",
-    alt: "A group called Flat 4B with two members and its recent shared bills.",
+    alt: "The Flat 4B group: who owes whom, what each person paid, its two members and its bills.",
   },
   {
     title: "Savings goals you can watch move",

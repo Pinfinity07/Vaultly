@@ -9,6 +9,7 @@ Live application: https://vaultly-one.vercel.app
 ## Table of Contents
 
 - [Overview](#overview)
+- [Screenshots](#screenshots)
 - [Core Features](#core-features)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
@@ -32,6 +33,18 @@ Most personal finance apps are built for a single user. Vaultly is built around 
 
 The application is split into two independently deployed services: a Next.js frontend and an Express/PostgreSQL backend, connected over a REST API with cookie-based authentication.
 
+## Screenshots
+
+All screenshots use an example account with sample data.
+
+| Dashboard | Expenses |
+| --- | --- |
+| ![Dashboard with this month's spending, a six-month chart and spending by category](vaultly-frontend/public/product/dashboard.webp) | ![Expenses list with search, filters and a sortable table](vaultly-frontend/public/product/expenses.webp) |
+| **Group detail** | **Savings goals** |
+| ![A shared group showing who owes whom, its members and its bills](vaultly-frontend/public/product/groups.webp) | ![Savings goals with progress bars and deadlines](vaultly-frontend/public/product/goals.webp) |
+
+The visual design (tokens, type, spacing, motion and component rules) is documented in [DESIGN.md](DESIGN.md).
+
 ## Core Features
 
 **Personal expense tracking**
@@ -50,7 +63,7 @@ Server-side aggregation for spending overview with category breakdown, monthly t
 Email and password auth alongside Google OAuth 2.0, with short-lived access tokens and longer-lived refresh tokens stored in httpOnly cookies.
 
 **Quick add**
-Press `Cmd+K` / `Ctrl+K` anywhere in the app to open the quick-add expense dialog.
+Press `Cmd+K` / `Ctrl+K` anywhere in the app to open the command palette: add an expense, jump to any page, hide amounts or sign out. On the Expenses page, `/` focuses search.
 
 ## Architecture
 
@@ -217,9 +230,11 @@ Vaultly/
         │   ├── profile/
         │   ├── login/
         │   └── signup/
-        ├── components/          Modals, navigation, and shared UI
+        ├── components/          Pages' building blocks, dialogs, navigation, command palette
+        │   └── ui/              Design-system primitives (Button, Field, Dialog, ...)
         ├── hooks/               GSAP animation and count-up hooks
-        └── lib/api.js           API client with silent token refresh
+        └── lib/                 API client with silent token refresh, money and
+                                 category formatting, display preferences
 ```
 
 The backend follows a route, controller, service pattern: routes wire up middleware, controllers validate requests and map errors to status codes, and services own the database access.
@@ -316,7 +331,8 @@ GitHub Actions runs on every push to `main` and every pull request targeting it:
 
 ## Known Limitations
 
-- **No cost splitting yet.** Groups share an expense log, but Vaultly does not yet calculate who owes whom.
+- **Balances are estimates.** The API records who paid each group bill but not how it was split, so the group page computes who owes whom assuming an equal split between current members, and says so.
+- **Currency is display only.** The currency setting changes symbols and number format in the browser; amounts are stored without a currency and are never converted.
 - **Amounts are floating point.** Money is stored as double precision, which can introduce rounding errors. Moving to `Decimal` is planned.
 - **Refresh tokens can't be revoked.** They are reissued on each refresh but not stored server-side, so logging out clears the cookies without invalidating a copied token.
 - **In-memory rate limiting.** Limits reset when the server restarts and aren't shared across instances.
@@ -324,7 +340,7 @@ GitHub Actions runs on every push to `main` and every pull request targeting it:
 
 ## Roadmap
 
-- Balances and settle-up for groups
+- Stored splits and settle-up payments for groups (balances are currently estimated)
 - `Decimal` amounts for money
 - Server-side refresh token storage with revocation and reuse detection
 - Redis-backed rate limiting

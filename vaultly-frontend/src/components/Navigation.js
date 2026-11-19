@@ -242,7 +242,7 @@ function AccountMenu({ user, pathname, onLogout }) {
         aria-label={`Account: ${displayName}`}
         className="flex h-10 w-10 items-center justify-center rounded-full"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand text-meta font-semibold text-white">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand text-meta font-semibold text-white" aria-hidden="true">
           {userInitials}
         </span>
       </button>
