@@ -42,7 +42,14 @@ export default function HeroSection() {
         </div>
 
         <div data-hero>
-          <ProductShot src="/product/dashboard.webp" alt="The Vaultly dashboard: this month's spending, a six-month spending chart and a breakdown by category." priority />
+          <ProductShot
+            src="/product/dashboard-summary.webp"
+            alt="The Vaultly dashboard: this month's spending, a six-month spending chart and a breakdown by category."
+            width={1584}
+            height={1486}
+            priority
+            caption="Screenshots on this page use an example account with sample data."
+          />
         </div>
       </div>
     </section>

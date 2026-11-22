@@ -39,9 +39,9 @@ All screenshots use an example account with sample data.
 
 | Dashboard | Expenses |
 | --- | --- |
-| ![Dashboard with this month's spending, a six-month chart and spending by category](vaultly-frontend/public/product/dashboard.webp) | ![Expenses list with search, filters and a sortable table](vaultly-frontend/public/product/expenses.webp) |
+| ![Dashboard with this month's spending, a six-month chart and spending by category](vaultly-frontend/public/product/dashboard-summary.webp) | ![Expenses list with search, filters and a sortable table](vaultly-frontend/public/product/expenses-table.webp) |
 | **Group detail** | **Savings goals** |
-| ![A shared group showing who owes whom, its members and its bills](vaultly-frontend/public/product/groups.webp) | ![Savings goals with progress bars and deadlines](vaultly-frontend/public/product/goals.webp) |
+| ![A shared group showing who owes whom and its members](vaultly-frontend/public/product/group-balances.webp) | ![Savings goals with amounts saved, progress bars and deadlines](vaultly-frontend/public/product/goals-progress.webp) |
 
 ## Core Features
 
