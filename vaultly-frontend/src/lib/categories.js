@@ -6,7 +6,7 @@ export function formatCategory(name) {
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 
-// Data palette from DESIGN.md. Every entry is at least 3:1 against white.
+// Data palette for categories. Every entry is at least 3:1 against white.
 export const CATEGORY_COLORS = [
   '#0f766e',
   '#0369a1',
