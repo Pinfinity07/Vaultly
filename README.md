@@ -2,7 +2,7 @@
 
 Vaultly is a full-stack finance tracker for individuals and groups. Users log personal expenses, keep a shared expense log with roommates or family, set savings goals, and review spending patterns on an analytics dashboard.
 
-Live application: https://vaultly-one.vercel.app
+Live application: https://vaultly.bnsl.dev (also served at https://vaultly-one.vercel.app)
 
 ---
 
