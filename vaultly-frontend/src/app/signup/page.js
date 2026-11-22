@@ -24,7 +24,6 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -35,7 +34,6 @@ export default function SignupPage() {
     if (!PASSWORD_RULES.every((rule) => rule.test(password))) newErrors.password = 'Your password needs everything in the list below';
     if (!confirmPassword.trim()) newErrors.confirmPassword = 'Enter your password again';
     else if (password !== confirmPassword) newErrors.confirmPassword = 'The two passwords do not match';
-    if (!agreedToTerms) newErrors.terms = 'Tick the box to continue';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -140,24 +138,6 @@ export default function SignupPage() {
           error={errors.confirmPassword}
           required
         />
-
-        <div>
-          <label className="flex items-start gap-3 text-ui text-ink-2">
-            <input
-              type="checkbox"
-              checked={agreedToTerms}
-              onChange={(e) => {
-                setAgreedToTerms(e.target.checked);
-                if (errors.terms) setErrors({ ...errors, terms: '' });
-              }}
-              aria-invalid={errors.terms ? true : undefined}
-              aria-describedby={errors.terms ? 'terms-error' : undefined}
-              className="mt-0.5 h-5 w-5 shrink-0 rounded border-line-strong accent-brand"
-            />
-            I accept the terms of service and agree to Vaultly storing my data to run my account.
-          </label>
-          {errors.terms && <p id="terms-error" className="mt-1.5 text-ui text-negative">{errors.terms}</p>}
-        </div>
 
         <Button type="submit" size="lg" loading={loading} className="w-full">
           Create account
