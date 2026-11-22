@@ -43,8 +43,6 @@ All screenshots use an example account with sample data.
 | **Group detail** | **Savings goals** |
 | ![A shared group showing who owes whom, its members and its bills](vaultly-frontend/public/product/groups.webp) | ![Savings goals with progress bars and deadlines](vaultly-frontend/public/product/goals.webp) |
 
-The visual design (tokens, type, spacing, motion and component rules) is documented in [DESIGN.md](DESIGN.md).
-
 ## Core Features
 
 **Personal expense tracking**

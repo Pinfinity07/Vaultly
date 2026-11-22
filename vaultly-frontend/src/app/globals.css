@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Design tokens. DESIGN.md at the repo root is the source of truth for these values. */
+/* Design tokens: colours, type scale and radii. Text colours meet 4.5:1 contrast on white. */
 @theme {
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
