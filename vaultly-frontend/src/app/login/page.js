@@ -1,12 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import Field from '../../components/ui/Field';
 import Button from '../../components/ui/Button';
 import AuthLayout, { GoogleButton, OrDivider, FormAlert } from '../../components/AuthLayout';
 import { login } from '../../lib/api';
 import toast from 'react-hot-toast';
+
+// The API's Google sign-in callback redirects here with ?error=<code> when it fails.
+const OAUTH_ERRORS = {
+  unverified_email: 'Google has not verified the email on that account, so we cannot sign you in with it. Verify it with Google, or sign in with your email and password.',
+  invalid_state: 'That Google sign-in link expired or was opened in another browser. Please try again.',
+  no_code: 'Google sign-in was cancelled. Please try again.',
+  auth_failed: 'Google sign-in did not work this time. Please try again.',
+};
+
+// Reads the query string, so it renders inside Suspense and the rest of the page stays static.
+function OAuthErrorAlert({ hidden }) {
+  const message = OAUTH_ERRORS[useSearchParams().get('error')];
+  return hidden ? null : <FormAlert>{message}</FormAlert>;
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -65,6 +80,11 @@ export default function LoginPage() {
         </>
       }
     >
+      <Suspense fallback={null}>
+        <div className="mb-4 empty:hidden">
+          <OAuthErrorAlert hidden={Boolean(errors.submit)} />
+        </div>
+      </Suspense>
       <GoogleButton />
       <OrDivider />
 

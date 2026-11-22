@@ -6,7 +6,8 @@ import { Eye, EyeOff } from 'lucide-react';
 export const controlClasses = (error) => [
   'w-full h-10 px-3 rounded-control border bg-surface text-ui text-ink',
   'placeholder:text-ink-4 transition-colors',
-  'focus:outline-none focus-visible:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20',
+  // 1px brand border plus a 1px brand ring: a solid 2px outline at 5.5:1 contrast.
+  'focus:outline-none focus-visible:outline-none focus:border-brand focus:ring-1 focus:ring-brand',
   'disabled:bg-canvas disabled:text-ink-3',
   error ? 'border-negative' : 'border-line-strong',
 ].join(' ');

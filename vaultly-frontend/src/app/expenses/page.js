@@ -194,7 +194,7 @@ export default function ExpensesPage() {
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search by description or category"
                 aria-keyshortcuts="/"
-                className="h-10 w-full rounded-control border border-line-strong bg-surface pl-9 pr-10 text-ui text-ink placeholder:text-ink-4 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 focus-visible:outline-none"
+                className="h-10 w-full rounded-control border border-line-strong bg-surface pl-9 pr-10 text-ui text-ink placeholder:text-ink-4 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand focus-visible:outline-none"
               />
               {!searchInput && (
                 <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border border-line bg-canvas px-1.5 font-sans text-meta text-ink-3 md:block" aria-hidden="true">/</kbd>
