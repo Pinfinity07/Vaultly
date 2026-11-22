@@ -31,8 +31,8 @@ export default function AuthLayout({ title, description, children, footer }) {
           Your spending, your shared bills and your savings goals in one place.
         </p>
         {/* Bleeds off the right edge on purpose. */}
-        <div className="w-[720px] overflow-hidden rounded-l-surface border border-r-0 border-line bg-surface shadow-[0_24px_48px_-24px_rgb(15_23_42/0.25)]">
-          <Image src="/product/dashboard.webp" alt="" width={2560} height={1600} sizes="720px" className="h-auto w-full" priority />
+        <div className="w-[520px] overflow-hidden rounded-l-surface border border-r-0 border-line bg-surface shadow-[0_24px_48px_-24px_rgb(15_23_42/0.25)]">
+          <Image src="/product/dashboard-summary.webp" alt="" width={1584} height={1486} sizes="520px" className="h-auto w-full" priority />
         </div>
         <p className="text-ui text-ink-3">Example account with sample data</p>
       </aside>

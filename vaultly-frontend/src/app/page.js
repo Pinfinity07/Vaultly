@@ -16,20 +16,23 @@ const FEATURES = [
   {
     title: "Every expense, easy to find",
     body: "Log a purchase in a few seconds, then search by description or filter by category and date when you need it again.",
-    image: "/product/expenses.webp",
-    alt: "The expenses list with a search box, filters and dated rows.",
+    image: "/product/expenses-table.webp",
+    size: [1584, 977],
+    alt: "The expenses list with a search box, category and date filters, and dated rows.",
   },
   {
     title: "Shared costs without the spreadsheet",
     body: "Make a group for your flat or a trip, add the people in it, and see who paid for what and who owes whom.",
-    image: "/product/groups.webp",
-    alt: "The Flat 4B group: who owes whom, what each person paid, its two members and its bills.",
+    image: "/product/group-balances.webp",
+    size: [1584, 644],
+    alt: "The Flat 4B group: who owes whom, what each person paid, and its two members.",
   },
   {
     title: "Savings goals you can watch move",
     body: "Set a target and a deadline, add money as you save it, and see how far you have left to go.",
-    image: "/product/goals.webp",
-    alt: "Three savings goals with progress bars and days left.",
+    image: "/product/goals-progress.webp",
+    size: [1584, 1220],
+    alt: "Two savings goals with amounts saved, progress bars and days left.",
   },
 ];
 
@@ -85,19 +88,26 @@ export default function Home() {
 
         <section aria-labelledby="features-heading" className="border-y border-line bg-surface py-16 sm:py-24">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <h2 id="features-heading" className="max-w-[24ch] text-h2 font-semibold text-ink">
-              Built for the money you spend alone and the money you split
-            </h2>
+            {/* Introduces the whole section, so it spans the width and outranks the feature titles. */}
+            <div className="mx-auto max-w-4xl text-center">
+              <h2 id="features-heading" className="text-[32px] leading-[40px] font-semibold tracking-tight text-ink sm:text-h1">
+                Built for the money you spend alone and the money you split
+              </h2>
+              <p className="mx-auto mt-4 max-w-[52ch] text-body text-ink-3 sm:text-[18px] sm:leading-[28px]">
+                Your own expenses, the bills you share and what you are saving for, in one place.
+              </p>
+            </div>
 
-            <div className="mt-12 space-y-16 sm:space-y-24">
+            <div className="mt-14 space-y-16 sm:mt-20 sm:space-y-24">
               {FEATURES.map((feature, index) => (
                 <SectionAnimator key={feature.title} animationType="slideUp">
-                  <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
-                    <div className={index % 2 === 1 ? "lg:order-2" : ""}>
+                  {/* Screenshots get the wider column so their text stays readable. */}
+                  <div className="grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
+                    <div className={`lg:col-span-5 ${index % 2 === 1 ? "lg:order-2" : ""}`}>
                       <h3 className="text-h3 font-semibold text-ink">{feature.title}</h3>
                       <p className="mt-3 max-w-[45ch] text-body text-ink-2">{feature.body}</p>
                     </div>
-                    <ProductShot src={feature.image} alt={feature.alt} width={2560} height={1440} />
+                    <ProductShot src={feature.image} alt={feature.alt} width={feature.size[0]} height={feature.size[1]} className="lg:col-span-7" />
                   </div>
                 </SectionAnimator>
               ))}
